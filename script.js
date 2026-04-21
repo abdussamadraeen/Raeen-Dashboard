@@ -333,6 +333,93 @@
         }
     };
 
+    // --- UI Physics Engine (Semantic Constellation) ---
+    const UIPhysicsEngine = {
+        elements: [],
+        mouse: { x: -1000, y: -1000 },
+        isRunning: false,
+
+        init() {
+            const shortcuts = document.querySelectorAll('.shortcut');
+            const searchInput = document.getElementById('search-input');
+            
+            this.elements = [
+                { el: searchInput, type: 'search', vx: 0, vy: 0, dx: 0, dy: 0, random: Math.random() * 10, mass: 2.0 },
+                ...Array.from(shortcuts).map(el => ({ el, type: 'shortcut', vx: 0, vy: 0, dx: 0, dy: 0, random: Math.random() * 10, mass: 1.0 }))
+            ];
+
+            window.addEventListener('mousemove', (e) => { this.mouse.x = e.x; this.mouse.y = e.y; });
+            window.addEventListener('mouseout', () => { this.mouse.x = -1000; this.mouse.y = -1000; });
+            
+            this.start();
+        },
+
+        start() {
+            if (this.isRunning) return;
+            this.isRunning = true;
+            this.animate();
+        },
+
+        animate() {
+            if (!this.isRunning) return;
+            const time = performance.now() * 0.001;
+
+            for(let i=0; i < this.elements.length; i++) {
+                let state = this.elements[i];
+                if (!state.el) continue;
+
+                // 1. Organic Breathing (Sine waves)
+                let breatheAmp = state.type === 'search' ? 3 : 8;
+                let breatheX = Math.sin(time * 0.8 + state.random) * breatheAmp;
+                let breatheY = Math.cos(time * 0.6 + state.random) * breatheAmp;
+
+                // 2. Mouse Repulsion
+                let rect = state.el.getBoundingClientRect();
+                let centerX = rect.left + rect.width / 2;
+                let centerY = rect.top + rect.height / 2;
+
+                let dxMouse = centerX - this.mouse.x;
+                let dyMouse = centerY - this.mouse.y;
+                let distance = Math.sqrt(dxMouse*dxMouse + dyMouse*dyMouse);
+                
+                let forceX = 0, forceY = 0;
+                let repelRadius = state.type === 'search' ? 250 : 180;
+                let repelStrength = state.type === 'search' ? 30 : 60;
+
+                if (distance < repelRadius && distance > 0) {
+                    let force = (repelRadius - distance) / repelRadius;
+                    forceX = (dxMouse / distance) * force * repelStrength;
+                    forceY = (dyMouse / distance) * force * repelStrength;
+                }
+
+                // 3. Target Displacement
+                let targetDx = breatheX + forceX;
+                let targetDy = breatheY + forceY;
+
+                // 4. Spring Physics
+                let spring = 0.08 / state.mass;
+                let friction = 0.85;
+
+                let ax = (targetDx - state.dx) * spring;
+                let ay = (targetDy - state.dy) * spring;
+
+                state.vx += ax;
+                state.vy += ay;
+                state.vx *= friction;
+                state.vy *= friction;
+
+                state.dx += state.vx;
+                state.dy += state.vy;
+
+                // 5. Apply via CSS Variables
+                state.el.style.setProperty('--dx', `${state.dx}px`);
+                state.el.style.setProperty('--dy', `${state.dy}px`);
+            }
+
+            requestAnimationFrame(() => this.animate());
+        }
+    };
+
     // --- Core Logic ---
     function applyTheme() {
         const root = document.documentElement;
@@ -568,6 +655,7 @@
 
     // --- Initialization ---
     CanvasEngine.init(dom.canvasLayer);
+    UIPhysicsEngine.init();
     renderGallery();
     applySettings();
     updateTime();

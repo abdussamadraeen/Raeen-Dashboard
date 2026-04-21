@@ -160,13 +160,14 @@ body {
     color: var(--text-primary); font-size: 1.15rem; font-family: inherit; font-weight: 400; outline: none;
     backdrop-filter: blur(24px); -webkit-backdrop-filter: blur(24px);
     box-shadow: 0 8px 32px var(--shadow); 
-    transition: all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
+    transform: translate(var(--dx, 0px), var(--dy, 0px)) scale(var(--scale, 1));
+    transition: background 0.4s, border-color 0.4s, box-shadow 0.4s, fill 0.4s;
 }
 #search-input::placeholder { color: var(--text-secondary); opacity: 0.8; }
 #search-input:focus { 
     background: var(--glass-hover-bg); 
     border-color: var(--accent); 
-    transform: scale(1.02);
+    --scale: 1.02;
     box-shadow: 0 15px 40px var(--shadow), 0 0 20px rgba(123, 97, 255, 0.3); 
 }
 #search-input:focus + .search-icon, .input-wrapper:focus-within .search-icon { fill: var(--accent); transform: scale(1.1); }
@@ -182,11 +183,13 @@ body {
     color: var(--text-primary); text-decoration: none;
     font-size: 0.85rem; font-weight: 500; 
     backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
-    transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1); cursor: pointer;
+    transform: translate(var(--dx, 0px), var(--dy, 0px)) scale(var(--scale, 1));
+    transition: background 0.3s, border-color 0.3s, box-shadow 0.3s; cursor: pointer;
     box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
 }
 .shortcut:hover { 
-    transform: translateY(-8px) scale(1.02); 
+    --scale: 1.02;
+    transform: translate(var(--dx, 0px), calc(var(--dy, 0px) - 8px)) scale(var(--scale, 1.02)); 
     background: var(--glass-hover-bg);
     border-color: var(--accent);
     box-shadow: 0 15px 35px rgba(0, 0, 0, 0.2), 0 0 15px rgba(123, 97, 255, 0.4); 
