@@ -5,7 +5,7 @@
     // --- State Management ---
     const defaultSettings = {
         themePreference: 'system',
-        backgroundType: 'bing',
+        backgroundType: 'canvas',
         backgroundValue: 'https://bing.biturl.top/?resolution=1920&format=image&index=0&mkt=en-US',
         localBackgroundData: null,
         showSearch: true,
@@ -106,6 +106,7 @@
     // --- DOM Elements Cache (O(1) lookups) ---
     const dom = {
         bgLayer: document.getElementById('background-layer'),
+        canvasLayer: document.getElementById('canvas-layer'),
         clockWidget: document.getElementById('clock-widget'),
         timeEl: document.getElementById('time'),
         searchWidget: document.getElementById('search-widget'),
@@ -221,6 +222,117 @@
         return div;
     }
 
+    // --- Live Canvas Engine (Neural Network) ---
+    const CanvasEngine = {
+        canvas: null,
+        ctx: null,
+        particles: [],
+        animationFrame: null,
+        mouse: { x: null, y: null, radius: 150 },
+        isRunning: false,
+
+        init(canvasEl) {
+            this.canvas = canvasEl;
+            if(!this.canvas) return;
+            this.ctx = this.canvas.getContext('2d');
+            this.resize();
+            window.addEventListener('resize', () => this.resize());
+            window.addEventListener('mousemove', (e) => { this.mouse.x = e.x; this.mouse.y = e.y; });
+            window.addEventListener('mouseout', () => { this.mouse.x = null; this.mouse.y = null; });
+        },
+
+        resize() {
+            if (!this.canvas) return;
+            this.canvas.width = window.innerWidth;
+            this.canvas.height = window.innerHeight;
+            this.initParticles();
+        },
+
+        initParticles() {
+            this.particles = [];
+            const numberOfParticles = (this.canvas.width * this.canvas.height) / 10000;
+            for (let i = 0; i < numberOfParticles; i++) {
+                const size = (Math.random() * 2) + 1;
+                const x = (Math.random() * ((innerWidth - size * 2) - (size * 2)) + size * 2);
+                const y = (Math.random() * ((innerHeight - size * 2) - (size * 2)) + size * 2);
+                const directionX = (Math.random() * 2) - 1;
+                const directionY = (Math.random() * 2) - 1;
+                this.particles.push({ x, y, directionX, directionY, size });
+            }
+        },
+
+        draw() {
+            this.ctx.clearRect(0, 0, innerWidth, innerHeight);
+            
+            const gradient = this.ctx.createLinearGradient(0,0, innerWidth, innerHeight);
+            gradient.addColorStop(0, '#0a0a1a');
+            gradient.addColorStop(1, '#1a1a2e');
+            this.ctx.fillStyle = gradient;
+            this.ctx.fillRect(0, 0, innerWidth, innerHeight);
+
+            for (let i = 0; i < this.particles.length; i++) {
+                let p = this.particles[i];
+                this.ctx.beginPath();
+                this.ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2, false);
+                this.ctx.fillStyle = '#7b61ff';
+                this.ctx.fill();
+
+                if (p.x > this.canvas.width || p.x < 0) p.directionX = -p.directionX;
+                if (p.y > this.canvas.height || p.y < 0) p.directionY = -p.directionY;
+                
+                p.x += p.directionX * 0.4;
+                p.y += p.directionY * 0.4;
+
+                if (this.mouse.x != null) {
+                    let dx = this.mouse.x - p.x;
+                    let dy = this.mouse.y - p.y;
+                    let distance = Math.sqrt(dx*dx + dy*dy);
+                    if (distance < this.mouse.radius) {
+                        const forceDirectionX = dx / distance;
+                        const forceDirectionY = dy / distance;
+                        const force = (this.mouse.radius - distance) / this.mouse.radius;
+                        p.x -= forceDirectionX * force * 1.5;
+                        p.y -= forceDirectionY * force * 1.5;
+                    }
+                }
+
+                for (let j = i; j < this.particles.length; j++) {
+                    let p2 = this.particles[j];
+                    let dx2 = p.x - p2.x;
+                    let dy2 = p.y - p2.y;
+                    let distance2 = (dx2*dx2 + dy2*dy2);
+                    if (distance2 < 12000) {
+                        let opacity = 1 - (distance2/12000);
+                        this.ctx.strokeStyle = `rgba(123, 97, 255, ${opacity * 0.6})`;
+                        this.ctx.lineWidth = 1;
+                        this.ctx.beginPath();
+                        this.ctx.moveTo(p.x, p.y);
+                        this.ctx.lineTo(p2.x, p2.y);
+                        this.ctx.stroke();
+                    }
+                }
+            }
+        },
+
+        animate() {
+            if (!this.isRunning) return;
+            this.draw();
+            this.animationFrame = requestAnimationFrame(() => this.animate());
+        },
+
+        start() {
+            if (this.isRunning) return;
+            this.isRunning = true;
+            if (this.particles.length === 0) this.initParticles();
+            this.animate();
+        },
+
+        stop() {
+            this.isRunning = false;
+            if (this.animationFrame) cancelAnimationFrame(this.animationFrame);
+        }
+    };
+
     // --- Core Logic ---
     function applyTheme() {
         const root = document.documentElement;
@@ -237,28 +349,40 @@
         applyTheme();
 
         // Set Background
-        if (dom.bgLayer) {
-            dom.bgLayer.innerHTML = '';
-            const t = settings.backgroundType;
-            const v = settings.backgroundValue;
-            const l = settings.localBackgroundData;
-            
-            if (t === 'bing') {
-                dom.bgLayer.style.background = `url('https://bing.biturl.top/?resolution=1920&format=image&index=0&mkt=en-US') no-repeat center center / cover`;
-            } else if (t === 'preset' || t === 'solid') {
-                dom.bgLayer.style.background = t === 'preset' ? `url('${v}') no-repeat center center / cover` : v;
-            } else if ((t === 'local' && l) || (t === 'custom' && v)) {
-                const source = t === 'local' ? l : v;
-                if (source.match(/\.(mp4|webm|ogg)$/i) || source.startsWith('data:video/')) {
-                    dom.bgLayer.style.background = 'none';
-                    const video = document.createElement('video');
-                    video.src = source; video.autoplay = true; video.loop = true; video.muted = true;
-                    dom.bgLayer.appendChild(video);
+        const t = settings.backgroundType;
+        
+        if (t === 'canvas') {
+            if (dom.bgLayer) dom.bgLayer.classList.add('hidden');
+            if (dom.canvasLayer) dom.canvasLayer.classList.remove('hidden');
+            CanvasEngine.start();
+        } else {
+            if (dom.canvasLayer) dom.canvasLayer.classList.add('hidden');
+            if (dom.bgLayer) dom.bgLayer.classList.remove('hidden');
+            CanvasEngine.stop();
+
+            if (dom.bgLayer) {
+                dom.bgLayer.innerHTML = '';
+                const v = settings.backgroundValue;
+                const l = settings.localBackgroundData;
+                
+                if (t === 'bing') {
+                    const todayStr = new Date().toISOString().split('T')[0];
+                    dom.bgLayer.style.background = `url('https://bing.biturl.top/?resolution=1920&format=image&index=0&mkt=en-US&cb=${todayStr}') no-repeat center center / cover`;
+                } else if (t === 'preset' || t === 'solid') {
+                    dom.bgLayer.style.background = t === 'preset' ? `url('${v}') no-repeat center center / cover` : v;
+                } else if ((t === 'local' && l) || (t === 'custom' && v)) {
+                    const source = t === 'local' ? l : v;
+                    if (source.match(/\.(mp4|webm|ogg)$/i) || source.startsWith('data:video/')) {
+                        dom.bgLayer.style.background = 'none';
+                        const video = document.createElement('video');
+                        video.src = source; video.autoplay = true; video.loop = true; video.muted = true;
+                        dom.bgLayer.appendChild(video);
+                    } else {
+                        dom.bgLayer.style.background = `url('${source}') no-repeat center center / cover`;
+                    }
                 } else {
-                    dom.bgLayer.style.background = `url('${source}') no-repeat center center / cover`;
+                    dom.bgLayer.style.background = 'var(--bg-body)';
                 }
-            } else {
-                dom.bgLayer.style.background = 'var(--bg-body)';
             }
         }
 
@@ -443,6 +567,7 @@
     }
 
     // --- Initialization ---
+    CanvasEngine.init(dom.canvasLayer);
     renderGallery();
     applySettings();
     updateTime();

@@ -10,7 +10,9 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
 </head>
 <body>
+    <!-- Background Elements -->
     <div id="background-layer" class="background-layer"></div>
+    <canvas id="canvas-layer" class="background-layer hidden"></canvas>
     <div class="overlay"></div>
     
     <!-- Clock positioned at top-left like Brave -->
@@ -91,8 +93,9 @@
                         <div class="settings-group mt-0">
                             <label>Background Type</label>
                             <select id="bg-type-select" class="custom-select">
-                                <option value="bing">Bing Daily Wallpaper (Default)</option>
-                                <option value="preset">Curated Gallery</option>
+                                <option value="canvas">Live Canvas (Interactive Neural Net)</option>
+                                <option value="bing">Bing Daily Wallpaper</option>
+                                <option value="preset">Theme Library</option>
                                 <option value="solid">Solid Colors & Gradients</option>
                                 <option value="local">Local File (Image/Video)</option>
                                 <option value="custom">Custom Media URL</option>
