@@ -25,14 +25,21 @@
 
         // Find the chat input (each AI uses different selectors)
         let inputEl = null;
+        console.log('Abdus Dashboard: AI Inject script attempting to find input...', attempts);
+
+        // ChatGPT
+        if (window.location.hostname.includes('chatgpt.com')) {
+            inputEl = document.querySelector('#prompt-textarea')
+                   || document.querySelector('textarea[data-id="root"]');
+        }
 
         // Gemini
         if (window.location.hostname.includes('gemini.google.com')) {
             // Gemini uses a rich text editor or a contenteditable div
-            inputEl = document.querySelector('.ql-editor[contenteditable="true"]')
+            inputEl = document.querySelector('rich-textarea div[contenteditable="true"]')
+                   || document.querySelector('.ql-editor[contenteditable="true"]')
                    || document.querySelector('div[contenteditable="true"][role="textbox"]')
-                   || document.querySelector('.input-area-container textarea')
-                   || document.querySelector('rich-textarea .ql-editor');
+                   || document.querySelector('.input-area-container textarea');
         }
 
         // Copilot

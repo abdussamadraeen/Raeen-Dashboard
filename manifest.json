@@ -13,10 +13,14 @@
     {
       "matches": [
         "https://gemini.google.com/*",
-        "https://copilot.microsoft.com/*"
+        "https://copilot.microsoft.com/*",
+        "https://chatgpt.com/*"
       ],
       "js": ["ai-inject.js"],
       "run_at": "document_idle"
     }
-  ]
+  ],
+  "content_security_policy": {
+    "extension_pages": "script-src 'self'; object-src 'self'; frame-src 'self' https://www.youtube.com;"
+  }
 }
