@@ -2,15 +2,57 @@
 (function() {
     'use strict'; // Enforce strict mode for highest performance and error checking
 
+    // --- IndexedDB for Local Media ---
+    const DB_NAME = 'AbdusDashboardDB';
+    const STORE_NAME = 'mediaStore';
+
+    function initDB() {
+        return new Promise((resolve, reject) => {
+            const request = indexedDB.open(DB_NAME, 1);
+            request.onupgradeneeded = (e) => {
+                const db = e.target.result;
+                if (!db.objectStoreNames.contains(STORE_NAME)) {
+                    db.createObjectStore(STORE_NAME);
+                }
+            };
+            request.onsuccess = () => resolve(request.result);
+            request.onerror = () => reject(request.error);
+        });
+    }
+
+    async function saveLocalMedia(file) {
+        try {
+            const db = await initDB();
+            return new Promise((resolve, reject) => {
+                const tx = db.transaction(STORE_NAME, 'readwrite');
+                tx.objectStore(STORE_NAME).put(file, 'bgMedia');
+                tx.oncomplete = () => resolve();
+                tx.onerror = () => reject(tx.error);
+            });
+        } catch (e) { console.error('Failed to save media', e); }
+    }
+
+    async function loadLocalMedia() {
+        try {
+            const db = await initDB();
+            return new Promise((resolve, reject) => {
+                const tx = db.transaction(STORE_NAME, 'readonly');
+                const req = tx.objectStore(STORE_NAME).get('bgMedia');
+                req.onsuccess = () => resolve(req.result);
+                req.onerror = () => reject(req.error);
+            });
+        } catch (e) { return null; }
+    }
+
     // --- State Management ---
     const defaultSettings = {
         themePreference: 'system',
         backgroundType: 'canvas',
         backgroundValue: 'https://bing.biturl.top/?resolution=1920&format=image&index=0&mkt=en-US',
-        localBackgroundData: null,
         showSearch: true,
         searchEngine: 'google',
         showTopSites: true,
+        topSitesSource: 'favorites',
         shortcuts: [
             { name: 'GitHub', url: 'https://github.com', icon: 'https://github.githubassets.com/favicons/favicon.svg' },
             { name: 'Kaggle', url: 'https://kaggle.com', icon: 'https://www.kaggle.com/static/images/favicon.ico' },
@@ -18,7 +60,8 @@
         ],
         showClock: true,
         clockFormat: 'auto',
-        showCards: false
+        showCards: false,
+        canvasStyle: 'neural'
     };
 
     let settings = { ...defaultSettings };
@@ -121,6 +164,8 @@
         tabPanes: document.querySelectorAll('.tab-pane'),
         themeRadios: document.getElementsByName('theme_preference'),
         bgTypeSelect: document.getElementById('bg-type-select'),
+        bgCanvasOptions: document.getElementById('bg-canvas-options'),
+        canvasStyleSelect: document.getElementById('canvas-style-select'),
         bgBingOptions: document.getElementById('bg-bing-options'),
         bgPresetOptions: document.getElementById('bg-preset-options'),
         bgSolidOptions: document.getElementById('bg-solid-options'),
@@ -135,13 +180,29 @@
         toggleSearch: document.getElementById('toggle-search'),
         engineRadios: document.getElementsByName('search_engine'),
         toggleTopSites: document.getElementById('toggle-topsites'),
+        topsitesSourceRadios: document.getElementsByName('topsites_source'),
         toggleClock: document.getElementById('toggle-clock'),
         clockFormatSelect: document.getElementById('clock-format-select'),
         toggleCards: document.getElementById('toggle-cards'),
         newShortcutName: document.getElementById('new-shortcut-name'),
         newShortcutUrl: document.getElementById('new-shortcut-url'),
         addShortcutBtn: document.getElementById('add-shortcut-btn'),
-        shortcutsList: document.getElementById('shortcuts-list')
+        shortcutsList: document.getElementById('shortcuts-list'),
+        cardDateValue: document.getElementById('card-date-value'),
+        cardDateDay: document.getElementById('card-date-day'),
+        cardFocusTime: document.getElementById('card-focus-time'),
+        focusToggleBtn: document.getElementById('focus-toggle-btn'),
+        focusResetBtn: document.getElementById('focus-reset-btn'),
+        notesList: document.getElementById('notes-list'),
+        notesCount: document.getElementById('notes-count'),
+        addNoteBtn: document.getElementById('add-note-btn'),
+        noteEditor: document.getElementById('note-editor'),
+        noteBackBtn: document.getElementById('note-back-btn'),
+        noteEditorTitle: document.getElementById('note-editor-title'),
+        noteEditorBody: document.getElementById('note-editor-body'),
+        noteCharCount: document.getElementById('note-char-count'),
+        noteSaveStatus: document.getElementById('note-save-status'),
+        noteDeleteBtn: document.getElementById('note-delete-btn')
     };
 
     // --- Render Gallery ---
@@ -183,7 +244,7 @@
             const div = document.createElement('div');
             div.className = 'managed-item';
             div.innerHTML = `
-                <div><strong>${sc.name}</strong> <span style="font-size:0.8em;opacity:0.7">${sc.url}</span></div>
+                <div><strong>${sc.name}</strong><span>${sc.url}</span></div>
                 <div class="managed-item-actions"><button data-index="${index}">Remove</button></div>
             `;
             listFragment.appendChild(div);
@@ -217,18 +278,20 @@
             widgetFragment.appendChild(a);
         };
 
-        // Render manual shortcuts
-        settings.shortcuts.forEach(renderShortcut);
-
-        // Fetch and append chrome history (top sites)
-        if (chrome && chrome.topSites) {
+        // Render manual shortcuts if setting is 'favorites' or 'frequently_visited'
+        if (settings.topSitesSource === 'favorites') {
+            settings.shortcuts.forEach(renderShortcut);
+            dom.topSitesWidget.appendChild(widgetFragment);
+        } else {
+            // Fetch and append chrome history (top sites)
+            if (typeof chrome !== 'undefined' && chrome.topSites) {
             chrome.topSites.get((topSites) => {
                 // Filter out sites already in manual shortcuts
                 const existingUrls = new Set(settings.shortcuts.map(s => s.url.replace(/\/$/, '')));
                 
                 let addedCount = 0;
                 for (let site of topSites) {
-                    if (addedCount >= 8) break; // Limit auto-added sites
+                    if (addedCount >= 24) break; // Limit auto-added sites
                     const cleanUrl = site.url.replace(/\/$/, '');
                     if (!existingUrls.has(cleanUrl)) {
                         // Shorten name if it's too long
@@ -241,8 +304,7 @@
                 }
                 dom.topSitesWidget.appendChild(widgetFragment);
             });
-        } else {
-            dom.topSitesWidget.appendChild(widgetFragment);
+            }
         }
     }
 
@@ -308,38 +370,53 @@
                 this.ctx.fillStyle = '#7b61ff';
                 this.ctx.fill();
 
-                if (p.x > this.canvas.width || p.x < 0) p.directionX = -p.directionX;
-                if (p.y > this.canvas.height || p.y < 0) p.directionY = -p.directionY;
-                
-                p.x += p.directionX * 0.4;
-                p.y += p.directionY * 0.4;
+                if (settings.canvasStyle === 'neural') {
+                    if (p.x > this.canvas.width || p.x < 0) p.directionX = -p.directionX;
+                    if (p.y > this.canvas.height || p.y < 0) p.directionY = -p.directionY;
+                    
+                    p.x += p.directionX * 0.4;
+                    p.y += p.directionY * 0.4;
 
-                if (this.mouse.x != null) {
-                    let dx = this.mouse.x - p.x;
-                    let dy = this.mouse.y - p.y;
-                    let distance = Math.sqrt(dx*dx + dy*dy);
-                    if (distance < this.mouse.radius) {
-                        const forceDirectionX = dx / distance;
-                        const forceDirectionY = dy / distance;
-                        const force = (this.mouse.radius - distance) / this.mouse.radius;
-                        p.x -= forceDirectionX * force * 1.5;
-                        p.y -= forceDirectionY * force * 1.5;
+                    if (this.mouse.x != null) {
+                        let dx = this.mouse.x - p.x;
+                        let dy = this.mouse.y - p.y;
+                        let distance = Math.sqrt(dx*dx + dy*dy);
+                        if (distance < this.mouse.radius) {
+                            const forceDirectionX = dx / distance;
+                            const forceDirectionY = dy / distance;
+                            const force = (this.mouse.radius - distance) / this.mouse.radius;
+                            p.x -= forceDirectionX * force * 1.5;
+                            p.y -= forceDirectionY * force * 1.5;
+                        }
                     }
-                }
 
-                for (let j = i; j < this.particles.length; j++) {
-                    let p2 = this.particles[j];
-                    let dx2 = p.x - p2.x;
-                    let dy2 = p.y - p2.y;
-                    let distance2 = (dx2*dx2 + dy2*dy2);
-                    if (distance2 < 12000) {
-                        let opacity = 1 - (distance2/12000);
-                        this.ctx.strokeStyle = `rgba(123, 97, 255, ${opacity * 0.6})`;
-                        this.ctx.lineWidth = 1;
-                        this.ctx.beginPath();
-                        this.ctx.moveTo(p.x, p.y);
-                        this.ctx.lineTo(p2.x, p2.y);
-                        this.ctx.stroke();
+                    for (let j = i; j < this.particles.length; j++) {
+                        let p2 = this.particles[j];
+                        let dx2 = p.x - p2.x;
+                        let dy2 = p.y - p2.y;
+                        let distance2 = (dx2*dx2 + dy2*dy2);
+                        if (distance2 < 12000) {
+                            let opacity = 1 - (distance2/12000);
+                            this.ctx.strokeStyle = `rgba(123, 97, 255, ${opacity * 0.6})`;
+                            this.ctx.lineWidth = 1;
+                            this.ctx.beginPath();
+                            this.ctx.moveTo(p.x, p.y);
+                            this.ctx.lineTo(p2.x, p2.y);
+                            this.ctx.stroke();
+                        }
+                    }
+                } else if (settings.canvasStyle === 'bubbles') {
+                    p.y -= (p.size * 0.3);
+                    p.x += Math.sin(p.y * 0.05) * 0.5;
+                    if (p.y < -50) {
+                        p.y = this.canvas.height + 50;
+                        p.x = Math.random() * this.canvas.width;
+                    }
+                } else if (settings.canvasStyle === 'rain') {
+                    p.y += (p.size * 2);
+                    if (p.y > this.canvas.height) {
+                        p.y = -50;
+                        p.x = Math.random() * this.canvas.width;
                     }
                 }
             }
@@ -394,22 +471,52 @@
             if (dom.bgLayer) {
                 dom.bgLayer.innerHTML = '';
                 const v = settings.backgroundValue;
-                const l = settings.localBackgroundData;
+                const applyBg = (url) => { dom.bgLayer.style.background = `url('${url}') no-repeat center center / cover`; };
                 
                 if (t === 'bing') {
                     const todayStr = new Date().toISOString().split('T')[0];
-                    dom.bgLayer.style.background = `url('https://bing.biturl.top/?resolution=1920&format=image&index=0&mkt=en-US&cb=${todayStr}') no-repeat center center / cover`;
-                } else if (t === 'preset' || t === 'solid') {
-                    dom.bgLayer.style.background = t === 'preset' ? `url('${v}') no-repeat center center / cover` : v;
-                } else if ((t === 'local' && l) || (t === 'custom' && v)) {
-                    const source = t === 'local' ? l : v;
-                    if (source.match(/\.(mp4|webm|ogg)$/i) || source.startsWith('data:video/')) {
-                        dom.bgLayer.style.background = 'none';
+                    applyBg(`https://bing.biturl.top/?resolution=1920&format=image&index=0&mkt=en-US&cb=${todayStr}`);
+                } else if (t === 'preset') {
+                    const img = new Image();
+                    img.onload = () => applyBg(v);
+                    img.src = v;
+                } else if (t === 'solid') {
+                    dom.bgLayer.style.background = v;
+                } else if (t === 'local') {
+                    loadLocalMedia().then(file => {
+                        if (file) {
+                            const source = URL.createObjectURL(file);
+                            if (file.type && file.type.startsWith('video/')) {
+                                dom.bgLayer.style.background = 'none';
+                                const video = document.createElement('video');
+                                video.src = source; video.autoplay = true; video.loop = true; video.muted = true;
+                                dom.bgLayer.appendChild(video);
+                            } else {
+                                applyBg(source);
+                            }
+                        }
+                    });
+                } else if (t === 'custom' && v) {
+                    dom.bgLayer.style.background = 'var(--bg-body)';
+                    
+                    const ytMatch = v.match(/(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/i);
+                    
+                    if (ytMatch) {
+                        const videoId = ytMatch[1];
+                        dom.bgLayer.innerHTML = `<iframe width="100%" height="100%" src="https://www.youtube.com/embed/${videoId}?autoplay=1&mute=1&controls=0&showinfo=0&rel=0&loop=1&playlist=${videoId}" frameborder="0" allow="autoplay; encrypted-media" style="position:absolute; width:100vw; height:56.25vw; min-height:100vh; min-width:177.77vh; top:50%; left:50%; transform:translate(-50%, -50%); pointer-events:none;"></iframe>`;
+                    } else if (v.match(/\.(mp4|webm|ogg)$/i)) {
                         const video = document.createElement('video');
-                        video.src = source; video.autoplay = true; video.loop = true; video.muted = true;
+                        video.src = v;
+                        video.autoplay = true;
+                        video.muted = true;
+                        video.loop = true;
                         dom.bgLayer.appendChild(video);
                     } else {
-                        dom.bgLayer.style.background = `url('${source}') no-repeat center center / cover`;
+                        const applyBg = (url) => { dom.bgLayer.style.backgroundImage = `url('${url}')`; };
+                        const img = new Image();
+                        img.onload = () => applyBg(v);
+                        img.onerror = () => applyBg(v); // Fallback if preloader is blocked by CORS
+                        img.src = v;
                     }
                 } else {
                     dom.bgLayer.style.background = 'var(--bg-body)';
@@ -431,15 +538,19 @@
     function syncModalUI() {
         if (dom.themeRadios) Array.from(dom.themeRadios).forEach(r => r.checked = (r.value === settings.themePreference));
         if (dom.engineRadios) Array.from(dom.engineRadios).forEach(r => r.checked = (r.value === settings.searchEngine));
+        if (dom.topsitesSourceRadios) Array.from(dom.topsitesSourceRadios).forEach(r => r.checked = (r.value === settings.topSitesSource));
 
         if (dom.bgTypeSelect) {
             dom.bgTypeSelect.value = settings.backgroundType;
             const t = settings.backgroundType;
+            if(dom.bgCanvasOptions) dom.bgCanvasOptions.classList.toggle('hidden', t !== 'canvas');
             if(dom.bgBingOptions) dom.bgBingOptions.classList.toggle('hidden', t !== 'bing');
             if(dom.bgPresetOptions) dom.bgPresetOptions.classList.toggle('hidden', t !== 'preset');
             if(dom.bgSolidOptions) dom.bgSolidOptions.classList.toggle('hidden', t !== 'solid');
             if(dom.bgLocalOptions) dom.bgLocalOptions.classList.toggle('hidden', t !== 'local');
             if(dom.bgCustomOptions) dom.bgCustomOptions.classList.toggle('hidden', t !== 'custom');
+            
+            if(dom.canvasStyleSelect) dom.canvasStyleSelect.value = settings.canvasStyle || 'neural';
 
             if (t === 'solid' && !settings.backgroundValue.includes('url') && !settings.backgroundValue.includes('gradient')) {
                 if(dom.bgColorPicker) dom.bgColorPicker.value = settings.backgroundValue.startsWith('#') ? settings.backgroundValue.substring(0,7) : '#1a1a2e';
@@ -473,18 +584,12 @@
 
             const engine = engines[settings.searchEngine] || engines['google'];
             const isAI = ['chatgpt', 'copilot', 'gemini'].includes(settings.searchEngine);
-            const redirectUrl = isAI 
-                ? engine.action + (settings.searchEngine !== 'gemini' ? '?q=' + encodeURIComponent(query) : '')
+            
+            const redirectUrl = isAI
+                ? engine.action + '?q=' + encodeURIComponent(query)
                 : engine.action + '?' + engine.param + '=' + encodeURIComponent(query);
 
-            if (isAI) {
-                navigator.clipboard.writeText(query).then(() => {
-                    dom.searchInput.value = 'Prompt Copied! Just paste (Ctrl+V) it...';
-                    setTimeout(() => window.location.href = redirectUrl, 700);
-                }).catch(() => window.location.href = redirectUrl);
-            } else {
-                window.location.href = redirectUrl;
-            }
+            window.location.href = redirectUrl;
         });
     }
 
@@ -508,6 +613,7 @@
     // Settings Bindings
     if (dom.themeRadios) Array.from(dom.themeRadios).forEach(r => r.addEventListener('change', (e) => { if(e.target.checked) { settings.themePreference = e.target.value; saveSettings(); } }));
     if (dom.engineRadios) Array.from(dom.engineRadios).forEach(r => r.addEventListener('change', (e) => { if(e.target.checked) { settings.searchEngine = e.target.value; saveSettings(); } }));
+    if (dom.topsitesSourceRadios) Array.from(dom.topsitesSourceRadios).forEach(r => r.addEventListener('change', (e) => { if(e.target.checked) { settings.topSitesSource = e.target.value; saveSettings(); } }));
     if (dom.bgTypeSelect) dom.bgTypeSelect.addEventListener('change', (e) => {
         settings.backgroundType = e.target.value;
         if (settings.backgroundType === 'preset') {
@@ -518,18 +624,22 @@
         else if (settings.backgroundType === 'custom') settings.backgroundValue = dom.bgCustomUrl ? dom.bgCustomUrl.value : '';
         saveSettings();
     });
+    if (dom.canvasStyleSelect) dom.canvasStyleSelect.addEventListener('change', (e) => {
+        settings.canvasStyle = e.target.value;
+        saveSettings();
+    });
     if (dom.galleryCategorySelect) dom.galleryCategorySelect.addEventListener('change', (e) => {
         renderGallery(e.target.value);
         document.querySelectorAll('.bg-option').forEach(d => d.classList.toggle('selected', settings.backgroundType === 'preset' && d.dataset.url === settings.backgroundValue));
     });
     if (dom.colorSwatches) dom.colorSwatches.forEach(s => s.addEventListener('click', () => { settings.backgroundType = 'solid'; settings.backgroundValue = s.dataset.color; saveSettings(); }));
     if (dom.bgColorPicker) dom.bgColorPicker.addEventListener('input', (e) => { settings.backgroundType = 'solid'; settings.backgroundValue = e.target.value; saveSettings(); });
-    if (dom.localFileInput) dom.localFileInput.addEventListener('change', (e) => {
+    if (dom.localFileInput) dom.localFileInput.addEventListener('change', async (e) => {
         const file = e.target.files[0];
         if (!file) return;
-        const reader = new FileReader();
-        reader.onload = (event) => { settings.backgroundType = 'local'; settings.localBackgroundData = event.target.result; saveSettings(); };
-        reader.readAsDataURL(file);
+        await saveLocalMedia(file);
+        settings.backgroundType = 'local';
+        saveSettings();
     });
     if (dom.bgCustomUrl) dom.bgCustomUrl.addEventListener('change', (e) => { settings.backgroundValue = e.target.value; saveSettings(); });
     
@@ -577,10 +687,8 @@
         
         let hours = now.getHours();
         let minutes = now.getMinutes();
-        let ampm = '';
         
         if (!use24h) {
-            ampm = hours >= 12 ? 'PM' : 'AM';
             hours = hours % 12;
             hours = hours ? hours : 12;
         } else {
@@ -593,9 +701,244 @@
         
         // Only trigger DOM reflow if the minute actually changed
         if (formatted !== lastRenderedTime) {
-            dom.timeEl.innerHTML = formatted;
+            dom.timeEl.textContent = formatted;
             lastRenderedTime = formatted;
         }
+    }
+
+    // --- Cards Logic ---
+
+    // ── Date Card ──
+    function updateDateCard() {
+        if (!dom.cardDateValue) return;
+        const now = new Date();
+        const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+        const days = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+        dom.cardDateValue.textContent = `${months[now.getMonth()]} ${now.getDate()}`;
+        if (dom.cardDateDay) dom.cardDateDay.textContent = days[now.getDay()];
+    }
+
+    // ── Focus Timer (synced across tabs via localStorage timestamp) ──
+    const FOCUS_DURATION = 25 * 60; // 25 minutes
+    const FOCUS_KEY = 'abdus_focus_timer';
+    let focusTickInterval = null;
+
+    function getFocusState() {
+        try {
+            const raw = localStorage.getItem(FOCUS_KEY);
+            return raw ? JSON.parse(raw) : null;
+        } catch(e) { return null; }
+    }
+
+    function setFocusState(state) {
+        try { localStorage.setItem(FOCUS_KEY, JSON.stringify(state)); } catch(e) {}
+    }
+
+    function clearFocusState() {
+        try { localStorage.removeItem(FOCUS_KEY); } catch(e) {}
+    }
+
+    function renderFocusUI() {
+        if (!dom.cardFocusTime || !dom.focusToggleBtn) return;
+        const state = getFocusState();
+
+        if (!state) {
+            // Idle
+            dom.cardFocusTime.textContent = '25:00';
+            dom.focusToggleBtn.textContent = '\u25b6 Start';
+            return;
+        }
+
+        if (state.running) {
+            const remaining = Math.max(0, Math.round((state.endTime - Date.now()) / 1000));
+            if (remaining <= 0) {
+                clearFocusState();
+                dom.cardFocusTime.textContent = '00:00';
+                dom.focusToggleBtn.textContent = '\u25b6 Start';
+                return;
+            }
+            const m = Math.floor(remaining / 60);
+            const s = remaining % 60;
+            dom.cardFocusTime.textContent = `${m < 10 ? '0' : ''}${m}:${s < 10 ? '0' : ''}${s}`;
+            dom.focusToggleBtn.textContent = '\u23f8 Pause';
+        } else {
+            // Paused
+            const sec = state.remaining || FOCUS_DURATION;
+            const m = Math.floor(sec / 60);
+            const s = sec % 60;
+            dom.cardFocusTime.textContent = `${m < 10 ? '0' : ''}${m}:${s < 10 ? '0' : ''}${s}`;
+            dom.focusToggleBtn.textContent = '\u25b6 Resume';
+        }
+    }
+
+    function startFocusTick() {
+        if (focusTickInterval) clearInterval(focusTickInterval);
+        focusTickInterval = setInterval(renderFocusUI, 500);
+    }
+
+    if (dom.focusToggleBtn) {
+        dom.focusToggleBtn.addEventListener('click', () => {
+            const state = getFocusState();
+            if (!state) {
+                // Start fresh
+                setFocusState({ running: true, endTime: Date.now() + FOCUS_DURATION * 1000 });
+            } else if (state.running) {
+                // Pause
+                const remaining = Math.max(0, Math.round((state.endTime - Date.now()) / 1000));
+                setFocusState({ running: false, remaining });
+            } else {
+                // Resume from paused
+                setFocusState({ running: true, endTime: Date.now() + (state.remaining || FOCUS_DURATION) * 1000 });
+            }
+            renderFocusUI();
+        });
+    }
+
+    if (dom.focusResetBtn) {
+        dom.focusResetBtn.addEventListener('click', () => {
+            clearFocusState();
+            if (focusTickInterval) clearInterval(focusTickInterval);
+            renderFocusUI();
+        });
+    }
+
+    // Listen for changes from other tabs
+    window.addEventListener('storage', (e) => {
+        if (e.key === FOCUS_KEY) renderFocusUI();
+        if (e.key === 'abdus_notes') renderNotesList();
+    });
+
+    // ── Notes App ──
+    const NOTES_KEY = 'abdus_notes';
+    let currentNoteId = null;
+    let saveTimeout = null;
+
+    function getNotes() {
+        try {
+            const raw = localStorage.getItem(NOTES_KEY);
+            return raw ? JSON.parse(raw) : [];
+        } catch(e) { return []; }
+    }
+
+    function saveNotes(notes) {
+        try { localStorage.setItem(NOTES_KEY, JSON.stringify(notes)); } catch(e) {}
+    }
+
+    function formatNoteDate(ts) {
+        const d = new Date(ts);
+        const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+        const h = d.getHours();
+        const m = d.getMinutes();
+        return `${months[d.getMonth()]} ${d.getDate()}, ${h < 10 ? '0' : ''}${h}:${m < 10 ? '0' : ''}${m}`;
+    }
+
+    function renderNotesList() {
+        if (!dom.notesList || !dom.notesCount) return;
+        const notes = getNotes();
+        dom.notesCount.textContent = notes.length;
+
+        if (notes.length === 0) {
+            dom.notesList.innerHTML = '<div class="notes-empty"><p>No notes yet</p><p style="font-size:0.72rem;margin-top:4px;">Tap "+ New" to create one</p></div>';
+            return;
+        }
+
+        const fragment = document.createDocumentFragment();
+        notes.sort((a, b) => b.updated - a.updated);
+        notes.forEach(note => {
+            const card = document.createElement('div');
+            card.className = 'note-card';
+            card.dataset.id = note.id;
+            const preview = (note.body || '').substring(0, 80).replace(/\n/g, ' ') || 'Empty note';
+            card.innerHTML = `
+                <div class="note-card-title">${note.title || 'Untitled'}</div>
+                <div class="note-card-preview">${preview}</div>
+                <div class="note-card-meta">${formatNoteDate(note.updated)}</div>
+            `;
+            card.addEventListener('click', () => openNoteEditor(note.id));
+            fragment.appendChild(card);
+        });
+        dom.notesList.innerHTML = '';
+        dom.notesList.appendChild(fragment);
+    }
+
+    function openNoteEditor(id) {
+        if (!dom.noteEditor || !dom.notesList) return;
+        currentNoteId = id;
+        const notes = getNotes();
+        const note = notes.find(n => n.id === id);
+        if (!note) return;
+
+        dom.noteEditorTitle.value = note.title || '';
+        dom.noteEditorBody.value = note.body || '';
+        updateCharCount();
+        if (dom.noteSaveStatus) dom.noteSaveStatus.textContent = 'Saved';
+
+        dom.notesList.classList.add('hidden');
+        dom.noteEditor.classList.remove('hidden');
+        // Hide the header too
+        const header = dom.notesList.previousElementSibling;
+        // Focus the body
+        dom.noteEditorBody.focus();
+    }
+
+    function closeNoteEditor() {
+        if (!dom.noteEditor || !dom.notesList) return;
+        saveCurrentNote();
+        currentNoteId = null;
+        dom.noteEditor.classList.add('hidden');
+        dom.notesList.classList.remove('hidden');
+        renderNotesList();
+    }
+
+    function saveCurrentNote() {
+        if (currentNoteId === null) return;
+        const notes = getNotes();
+        const idx = notes.findIndex(n => n.id === currentNoteId);
+        if (idx === -1) return;
+        notes[idx].title = (dom.noteEditorTitle ? dom.noteEditorTitle.value : '') || '';
+        notes[idx].body = (dom.noteEditorBody ? dom.noteEditorBody.value : '') || '';
+        notes[idx].updated = Date.now();
+        saveNotes(notes);
+        if (dom.noteSaveStatus) dom.noteSaveStatus.textContent = 'Saved';
+    }
+
+    function updateCharCount() {
+        if (!dom.noteCharCount || !dom.noteEditorBody) return;
+        const len = dom.noteEditorBody.value.length;
+        dom.noteCharCount.textContent = `${len} character${len !== 1 ? 's' : ''}`;
+    }
+
+    function autoSave() {
+        if (dom.noteSaveStatus) dom.noteSaveStatus.textContent = 'Saving...';
+        if (saveTimeout) clearTimeout(saveTimeout);
+        saveTimeout = setTimeout(() => {
+            saveCurrentNote();
+            updateCharCount();
+        }, 400);
+    }
+
+    // Notes event listeners
+    if (dom.addNoteBtn) {
+        dom.addNoteBtn.addEventListener('click', () => {
+            const notes = getNotes();
+            const newNote = { id: Date.now(), title: '', body: '', created: Date.now(), updated: Date.now() };
+            notes.unshift(newNote);
+            saveNotes(notes);
+            renderNotesList();
+            openNoteEditor(newNote.id);
+        });
+    }
+    if (dom.noteBackBtn) dom.noteBackBtn.addEventListener('click', closeNoteEditor);
+    if (dom.noteEditorTitle) dom.noteEditorTitle.addEventListener('input', autoSave);
+    if (dom.noteEditorBody) dom.noteEditorBody.addEventListener('input', autoSave);
+    if (dom.noteDeleteBtn) {
+        dom.noteDeleteBtn.addEventListener('click', () => {
+            if (currentNoteId === null) return;
+            let notes = getNotes();
+            notes = notes.filter(n => n.id !== currentNoteId);
+            saveNotes(notes);
+            closeNoteEditor();
+        });
     }
 
     // --- Initialization ---
@@ -603,6 +946,10 @@
     renderGallery();
     applySettings();
     updateTime();
+    updateDateCard();
+    renderFocusUI();
+    startFocusTick();
+    renderNotesList();
     setInterval(updateTime, 1000);
     if (settings.showSearch && dom.searchInput) dom.searchInput.focus();
 })();
