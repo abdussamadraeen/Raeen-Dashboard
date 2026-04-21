@@ -1,4 +1,4 @@
-// Immediately invoked function to avoid DOMContentLoaded issues since script is at the end of body
+// Immediately invoked function to ensure execution even if DOMContentLoaded has already fired.
 (function() {
     // --- State Management ---
     const defaultSettings = {
@@ -15,27 +15,27 @@
             { name: 'Ecommerce', url: 'http://localhost:3000', icon: '' }
         ],
         showClock: true,
-        use24h: false,
-        useDualTime: false,
-        dualTimeOffset: 0,
+        clockFormat: 'auto', // 'auto', '12h', '24h'
         showCards: false
     };
 
     let settings = { ...defaultSettings };
     
-    // Load from localStorage
-    const saved = localStorage.getItem('abdus_dashboard_settings');
-    if (saved) {
-        try {
+    // Safety block: if localStorage is denied (e.g. running from file://), this won't crash the script.
+    try {
+        const saved = localStorage.getItem('abdus_dashboard_settings');
+        if (saved) {
             settings = { ...settings, ...JSON.parse(saved) };
-        } catch (e) { console.error('Error loading settings', e); }
+        }
+    } catch (e) { 
+        console.warn('localStorage is not accessible. Settings will not be saved.', e); 
     }
 
     function saveSettings() {
         try {
             localStorage.setItem('abdus_dashboard_settings', JSON.stringify(settings));
         } catch (e) {
-            console.error('Storage quota exceeded, could not save local media completely.', e);
+            console.warn('Could not save settings.', e);
         }
         applySettings();
     }
@@ -60,7 +60,6 @@
     const bgLayer = document.getElementById('background-layer');
     const clockWidget = document.getElementById('clock-widget');
     const timeEl = document.getElementById('time');
-    const dualTimeEl = document.getElementById('dual-time');
     const searchWidget = document.getElementById('search-widget');
     const topSitesWidget = document.getElementById('top-sites-widget');
     const cardsWidget = document.getElementById('cards-widget');
@@ -92,11 +91,11 @@
     const toggleSearch = document.getElementById('toggle-search');
     const engineRadios = document.getElementsByName('search_engine');
     const toggleTopSites = document.getElementById('toggle-topsites');
+    
+    // Clock Settings
     const toggleClock = document.getElementById('toggle-clock');
-    const toggle24h = document.getElementById('toggle-24h');
-    const toggleDualTime = document.getElementById('toggle-dual-time');
-    const dualTimeGroup = document.getElementById('dual-time-group');
-    const dualTimeOffset = document.getElementById('dual-time-offset');
+    const clockFormatSelect = document.getElementById('clock-format-select');
+    
     const toggleCards = document.getElementById('toggle-cards');
 
     const newShortcutName = document.getElementById('new-shortcut-name');
@@ -106,12 +105,12 @@
 
     // --- Render Gallery ---
     function renderGallery() {
+        if (!galleryGrid) return;
         galleryGrid.innerHTML = '';
         curatedGallery.forEach(url => {
             const div = document.createElement('div');
             div.className = 'bg-option';
             div.dataset.url = url;
-            // Load a smaller thumbnail for the grid
             const thumbUrl = url.replace('w=1920', 'w=300');
             div.style.backgroundImage = `url('${thumbUrl}')`;
             
@@ -141,11 +140,13 @@
     }
 
     // Listen for system theme changes
-    window.matchMedia('(prefers-color-scheme: light)').addEventListener('change', e => {
-        if (settings.themePreference === 'system') {
-            applyTheme();
-        }
-    });
+    if (window.matchMedia) {
+        window.matchMedia('(prefers-color-scheme: light)').addEventListener('change', e => {
+            if (settings.themePreference === 'system') {
+                applyTheme();
+            }
+        });
+    }
 
     function applySettings() {
         applyTheme();
@@ -168,7 +169,7 @@
             } else {
                 bgLayer.style.background = `url('${settings.localBackgroundData}') no-repeat center center / cover`;
             }
-        } else if (settings.backgroundType === 'custom') {
+        } else if (settings.backgroundType === 'custom' && settings.backgroundValue) {
             if (settings.backgroundValue.match(/\.(mp4|webm|ogg)$/i)) {
                 bgLayer.style.background = 'none';
                 const video = document.createElement('video');
@@ -185,11 +186,15 @@
         }
 
         // Widgets Visibility
-        searchWidget.classList.toggle('hidden', !settings.showSearch);
-        topSitesWidget.classList.toggle('hidden', !settings.showTopSites);
-        clockWidget.classList.toggle('hidden', !settings.showClock);
-        cardsWidget.classList.toggle('hidden', !settings.showCards);
-        dualTimeEl.classList.toggle('hidden', !settings.useDualTime);
+        if(searchWidget) searchWidget.classList.toggle('hidden', !settings.showSearch);
+        if(topSitesWidget) topSitesWidget.classList.toggle('hidden', !settings.showTopSites);
+        
+        // Clock Visibility
+        if(clockWidget) {
+            clockWidget.style.display = settings.showClock ? 'block' : 'none';
+        }
+        
+        if(cardsWidget) cardsWidget.classList.toggle('hidden', !settings.showCards);
 
         // Search Engine
         const engines = {
@@ -199,17 +204,19 @@
             'bing': { action: 'https://www.bing.com/search', param: 'q' }
         };
         const engine = engines[settings.searchEngine] || engines['google'];
-        searchForm.action = engine.action;
-        searchInput.name = engine.param;
+        if(searchForm) searchForm.action = engine.action;
+        if(searchInput) searchInput.name = engine.param;
 
         // Top Sites Rendering
         renderTopSites();
 
         // Sync Modal UI with current settings
         syncModalUI();
+        updateTime();
     }
 
     function renderTopSites() {
+        if(!topSitesWidget || !shortcutsList) return;
         topSitesWidget.innerHTML = '';
         settings.shortcuts.forEach((sc, index) => {
             const a = document.createElement('a');
@@ -256,192 +263,231 @@
     // --- Sync Modal with Settings ---
     function syncModalUI() {
         // Theme
-        Array.from(themeRadios).forEach(r => {
-            r.checked = (r.value === settings.themePreference);
-        });
+        if (themeRadios) {
+            Array.from(themeRadios).forEach(r => {
+                r.checked = (r.value === settings.themePreference);
+            });
+        }
 
         // Background
-        bgTypeSelect.value = settings.backgroundType;
-        bgBingOptions.classList.toggle('hidden', settings.backgroundType !== 'bing');
-        bgPresetOptions.classList.toggle('hidden', settings.backgroundType !== 'preset');
-        bgSolidOptions.classList.toggle('hidden', settings.backgroundType !== 'solid');
-        bgLocalOptions.classList.toggle('hidden', settings.backgroundType !== 'local');
-        bgCustomOptions.classList.toggle('hidden', settings.backgroundType !== 'custom');
+        if (bgTypeSelect) {
+            bgTypeSelect.value = settings.backgroundType;
+            bgBingOptions.classList.toggle('hidden', settings.backgroundType !== 'bing');
+            bgPresetOptions.classList.toggle('hidden', settings.backgroundType !== 'preset');
+            bgSolidOptions.classList.toggle('hidden', settings.backgroundType !== 'solid');
+            bgLocalOptions.classList.toggle('hidden', settings.backgroundType !== 'local');
+            bgCustomOptions.classList.toggle('hidden', settings.backgroundType !== 'custom');
 
-        if (settings.backgroundType === 'solid' && !settings.backgroundValue.includes('url') && !settings.backgroundValue.includes('gradient')) {
-            bgColorPicker.value = settings.backgroundValue.startsWith('#') ? settings.backgroundValue.substring(0,7) : '#1a1a2e';
+            if (settings.backgroundType === 'solid' && !settings.backgroundValue.includes('url') && !settings.backgroundValue.includes('gradient')) {
+                bgColorPicker.value = settings.backgroundValue.startsWith('#') ? settings.backgroundValue.substring(0,7) : '#1a1a2e';
+            }
+            if (settings.backgroundType === 'custom') bgCustomUrl.value = settings.backgroundValue;
+            
+            const galleryDivs = document.querySelectorAll('.bg-option');
+            galleryDivs.forEach(div => {
+                div.classList.toggle('selected', settings.backgroundType === 'preset' && div.dataset.url === settings.backgroundValue);
+            });
+            
+            colorSwatches.forEach(swatch => {
+                swatch.classList.toggle('selected', settings.backgroundType === 'solid' && swatch.dataset.color === settings.backgroundValue);
+            });
         }
-        if (settings.backgroundType === 'custom') bgCustomUrl.value = settings.backgroundValue;
-        
-        const galleryDivs = document.querySelectorAll('.bg-option');
-        galleryDivs.forEach(div => {
-            div.classList.toggle('selected', settings.backgroundType === 'preset' && div.dataset.url === settings.backgroundValue);
-        });
-        
-        colorSwatches.forEach(swatch => {
-            swatch.classList.toggle('selected', settings.backgroundType === 'solid' && swatch.dataset.color === settings.backgroundValue);
-        });
 
         // Toggles
-        toggleSearch.checked = settings.showSearch;
-        toggleTopSites.checked = settings.showTopSites;
-        toggleClock.checked = settings.showClock;
-        toggle24h.checked = settings.use24h;
-        toggleDualTime.checked = settings.useDualTime;
-        toggleCards.checked = settings.showCards;
-        dualTimeOffset.value = settings.dualTimeOffset;
-        dualTimeGroup.style.display = settings.useDualTime ? 'block' : 'none';
+        if (toggleSearch) toggleSearch.checked = settings.showSearch;
+        if (toggleTopSites) toggleTopSites.checked = settings.showTopSites;
+        
+        if (toggleClock) toggleClock.checked = settings.showClock;
+        if (clockFormatSelect) clockFormatSelect.value = settings.clockFormat || 'auto';
+        
+        if (toggleCards) toggleCards.checked = settings.showCards;
 
-        Array.from(engineRadios).forEach(r => {
-            r.checked = (r.value === settings.searchEngine);
-        });
+        if (engineRadios) {
+            Array.from(engineRadios).forEach(r => {
+                r.checked = (r.value === settings.searchEngine);
+            });
+        }
     }
 
     // --- Event Listeners for UI ---
     
     // Modal Open/Close
-    settingsBtn.addEventListener('click', () => modalOverlay.classList.remove('hidden'));
-    closeBtn.addEventListener('click', () => modalOverlay.classList.add('hidden'));
-    modalOverlay.addEventListener('click', (e) => {
-        if (e.target === modalOverlay) modalOverlay.classList.add('hidden');
-    });
+    if (settingsBtn) {
+        settingsBtn.addEventListener('click', () => modalOverlay.classList.remove('hidden'));
+    }
+    if (closeBtn) {
+        closeBtn.addEventListener('click', () => modalOverlay.classList.add('hidden'));
+    }
+    if (modalOverlay) {
+        modalOverlay.addEventListener('click', (e) => {
+            if (e.target === modalOverlay) modalOverlay.classList.add('hidden');
+        });
+    }
 
     // Tab Switching
-    sidebarTabs.forEach(tab => {
-        tab.addEventListener('click', () => {
-            sidebarTabs.forEach(t => t.classList.remove('active'));
-            tabPanes.forEach(p => p.classList.remove('active'));
-            tab.classList.add('active');
-            document.getElementById(tab.dataset.target).classList.add('active');
+    if (sidebarTabs) {
+        sidebarTabs.forEach(tab => {
+            tab.addEventListener('click', () => {
+                sidebarTabs.forEach(t => t.classList.remove('active'));
+                tabPanes.forEach(p => p.classList.remove('active'));
+                tab.classList.add('active');
+                document.getElementById(tab.dataset.target).classList.add('active');
+            });
         });
-    });
+    }
 
     // Theme Settings
-    Array.from(themeRadios).forEach(r => {
-        r.addEventListener('change', (e) => {
-            if(e.target.checked) { settings.themePreference = e.target.value; saveSettings(); }
+    if (themeRadios) {
+        Array.from(themeRadios).forEach(r => {
+            r.addEventListener('change', (e) => {
+                if(e.target.checked) { settings.themePreference = e.target.value; saveSettings(); }
+            });
         });
-    });
+    }
 
     // Background Settings
-    bgTypeSelect.addEventListener('change', (e) => {
-        settings.backgroundType = e.target.value;
-        if (settings.backgroundType === 'preset') settings.backgroundValue = curatedGallery[0];
-        else if (settings.backgroundType === 'solid') settings.backgroundValue = colorSwatches[0].dataset.color;
-        else if (settings.backgroundType === 'custom') settings.backgroundValue = bgCustomUrl.value || '';
-        saveSettings();
-    });
-
-    colorSwatches.forEach(swatch => {
-        swatch.addEventListener('click', () => {
-            settings.backgroundType = 'solid';
-            settings.backgroundValue = swatch.dataset.color;
+    if (bgTypeSelect) {
+        bgTypeSelect.addEventListener('change', (e) => {
+            settings.backgroundType = e.target.value;
+            if (settings.backgroundType === 'preset') settings.backgroundValue = curatedGallery[0];
+            else if (settings.backgroundType === 'solid') settings.backgroundValue = colorSwatches[0].dataset.color;
+            else if (settings.backgroundType === 'custom') settings.backgroundValue = bgCustomUrl.value || '';
             saveSettings();
         });
-    });
+    }
 
-    bgColorPicker.addEventListener('input', (e) => {
-        settings.backgroundType = 'solid';
-        settings.backgroundValue = e.target.value;
-        saveSettings();
-    });
+    if (colorSwatches) {
+        colorSwatches.forEach(swatch => {
+            swatch.addEventListener('click', () => {
+                settings.backgroundType = 'solid';
+                settings.backgroundValue = swatch.dataset.color;
+                saveSettings();
+            });
+        });
+    }
 
-    localFileInput.addEventListener('change', (e) => {
-        const file = e.target.files[0];
-        if (!file) return;
-
-        const reader = new FileReader();
-        reader.onload = function(event) {
-            settings.backgroundType = 'local';
-            settings.localBackgroundData = event.target.result;
+    if (bgColorPicker) {
+        bgColorPicker.addEventListener('input', (e) => {
+            settings.backgroundType = 'solid';
+            settings.backgroundValue = e.target.value;
             saveSettings();
-        };
-        reader.readAsDataURL(file);
-    });
+        });
+    }
 
-    bgCustomUrl.addEventListener('change', (e) => {
-        settings.backgroundValue = e.target.value;
-        saveSettings();
-    });
+    if (localFileInput) {
+        localFileInput.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(event) {
+                settings.backgroundType = 'local';
+                settings.localBackgroundData = event.target.result;
+                saveSettings();
+            };
+            reader.readAsDataURL(file);
+        });
+    }
+
+    if (bgCustomUrl) {
+        bgCustomUrl.addEventListener('change', (e) => {
+            settings.backgroundValue = e.target.value;
+            saveSettings();
+        });
+    }
 
     // Search Settings
-    toggleSearch.addEventListener('change', (e) => { settings.showSearch = e.target.checked; saveSettings(); });
-    Array.from(engineRadios).forEach(r => {
-        r.addEventListener('change', (e) => {
-            if(e.target.checked) { settings.searchEngine = e.target.value; saveSettings(); }
+    if (toggleSearch) toggleSearch.addEventListener('change', (e) => { settings.showSearch = e.target.checked; saveSettings(); });
+    if (engineRadios) {
+        Array.from(engineRadios).forEach(r => {
+            r.addEventListener('change', (e) => {
+                if(e.target.checked) { settings.searchEngine = e.target.value; saveSettings(); }
+            });
         });
-    });
+    }
 
     // Top Sites Settings
-    toggleTopSites.addEventListener('change', (e) => { settings.showTopSites = e.target.checked; saveSettings(); });
-    addShortcutBtn.addEventListener('click', () => {
-        const name = newShortcutName.value.trim();
-        let url = newShortcutUrl.value.trim();
-        
-        if (name && url) {
-            if (!/^https?:\/\//i.test(url)) {
-                url = 'http://' + url;
+    if (toggleTopSites) toggleTopSites.addEventListener('change', (e) => { settings.showTopSites = e.target.checked; saveSettings(); });
+    if (addShortcutBtn) {
+        addShortcutBtn.addEventListener('click', () => {
+            const name = newShortcutName.value.trim();
+            let url = newShortcutUrl.value.trim();
+            
+            if (name && url) {
+                if (!/^https?:\/\//i.test(url)) {
+                    url = 'http://' + url;
+                }
+                let icon = '';
+                try {
+                    const urlObj = new URL(url);
+                    icon = `${urlObj.origin}/favicon.ico`;
+                } catch(e){}
+                settings.shortcuts.push({ name, url, icon });
+                newShortcutName.value = '';
+                newShortcutUrl.value = '';
+                saveSettings();
             }
-            let icon = '';
-            try {
-                const urlObj = new URL(url);
-                icon = `${urlObj.origin}/favicon.ico`;
-            } catch(e){}
-            settings.shortcuts.push({ name, url, icon });
-            newShortcutName.value = '';
-            newShortcutUrl.value = '';
-            saveSettings();
-        }
-    });
-    shortcutsList.addEventListener('click', (e) => {
-        if (e.target.tagName === 'BUTTON') {
-            const idx = parseInt(e.target.dataset.index, 10);
-            settings.shortcuts.splice(idx, 1);
-            saveSettings();
-        }
-    });
+        });
+    }
+    
+    if (shortcutsList) {
+        shortcutsList.addEventListener('click', (e) => {
+            if (e.target.tagName === 'BUTTON') {
+                const idx = parseInt(e.target.dataset.index, 10);
+                settings.shortcuts.splice(idx, 1);
+                saveSettings();
+            }
+        });
+    }
 
     // Clock Settings
-    toggleClock.addEventListener('change', (e) => { settings.showClock = e.target.checked; saveSettings(); });
-    toggle24h.addEventListener('change', (e) => { settings.use24h = e.target.checked; saveSettings(); });
-    toggleDualTime.addEventListener('change', (e) => { 
-        settings.useDualTime = e.target.checked; 
-        saveSettings(); 
-    });
-    dualTimeOffset.addEventListener('change', (e) => {
-        settings.dualTimeOffset = parseInt(e.target.value, 10) || 0;
-        saveSettings();
-    });
+    if (toggleClock) toggleClock.addEventListener('change', (e) => { settings.showClock = e.target.checked; saveSettings(); });
+    
+    if (clockFormatSelect) {
+        clockFormatSelect.addEventListener('change', (e) => { 
+            settings.clockFormat = e.target.value; 
+            saveSettings(); 
+        });
+    }
 
     // Cards Settings
-    toggleCards.addEventListener('change', (e) => { settings.showCards = e.target.checked; saveSettings(); });
+    if (toggleCards) toggleCards.addEventListener('change', (e) => { settings.showCards = e.target.checked; saveSettings(); });
 
 
     // --- Time Update Logic ---
     function updateTime() {
-        if (!settings.showClock) return;
+        if (!timeEl || !settings.showClock) return;
 
         const now = new Date();
-        timeEl.textContent = formatTime(now, settings.use24h);
-
-        if (settings.useDualTime) {
-            const dualNow = new Date(now.getTime() + (settings.dualTimeOffset * 60 * 60 * 1000));
-            dualTimeEl.textContent = formatTime(dualNow, settings.use24h);
-        }
+        timeEl.innerHTML = formatTime(now);
     }
 
-    function formatTime(date, use24h) {
-        let hours = date.getHours();
-        let minutes = date.getMinutes();
+    function formatTime(date) {
+        let format = settings.clockFormat || 'auto';
+        let use24h = format === '24h';
         
-        if (!use24h) {
-            hours = hours % 12;
-            hours = hours ? hours : 12; // the hour '0' should be '12'
+        if (format === 'auto') {
+            // Defaulting auto to 12h as requested in en-US
+            use24h = false;
         }
         
-        hours = hours < 10 && use24h ? '0' + hours : hours;
+        let hours = date.getHours();
+        let minutes = date.getMinutes();
+        let ampm = '';
+        
+        if (!use24h) {
+            ampm = hours >= 12 ? 'PM' : 'AM';
+            hours = hours % 12;
+            hours = hours ? hours : 12; // the hour '0' should be '12'
+        } else {
+            hours = hours < 10 ? '0' + hours : hours;
+        }
+        
         minutes = minutes < 10 ? '0' + minutes : minutes;
         
+        if (!use24h) {
+            return `${hours}:${minutes}<span class="ampm">${ampm}</span>`;
+        }
         return `${hours}:${minutes}`;
     }
 
@@ -450,5 +496,5 @@
     applySettings();
     updateTime();
     setInterval(updateTime, 1000);
-    if (settings.showSearch) searchInput.focus();
+    if (settings.showSearch && searchInput) searchInput.focus();
 })();
