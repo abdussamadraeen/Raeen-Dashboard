@@ -70,6 +70,18 @@
             "https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?w=1920&q=80",
             "https://images.unsplash.com/photo-1454496522488-7a8e488e8606?w=1920&q=80"
         ],
+        chrome_cityscapes: [
+            "https://images.unsplash.com/photo-1449844908441-8829872d2607?w=1920&q=80",
+            "https://images.unsplash.com/photo-1480714378408-67cf0d13bc1b?w=1920&q=80"
+        ],
+        chrome_textures: [
+            "https://images.unsplash.com/photo-1518640467707-6811f4a6ab73?w=1920&q=80",
+            "https://images.unsplash.com/photo-1512486130939-2c4f79935e4f?w=1920&q=80"
+        ],
+        chrome_geometric: [
+            "https://images.unsplash.com/photo-1550684376-efcbd6e3f031?w=1920&q=80",
+            "https://images.unsplash.com/photo-1550684848-fac1c5b4e853?w=1920&q=80"
+        ],
         chrome_aapi: [
             "https://images.unsplash.com/photo-1542125387-c71274d94f0a?w=1920&q=80",
             "https://images.unsplash.com/photo-1528164344705-47542687000d?w=1920&q=80"
