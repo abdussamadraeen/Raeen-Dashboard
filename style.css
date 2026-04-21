@@ -36,10 +36,10 @@
     --overlay: rgba(255, 255, 255, 0.2);
     
     /* Glassmorphism Light */
-    --glass-bg: linear-gradient(135deg, rgba(255,255,255,0.7), rgba(255,255,255,0.4));
-    --glass-hover-bg: linear-gradient(135deg, rgba(255,255,255,0.9), rgba(255,255,255,0.6));
-    --glass-border: rgba(255,255,255,0.5);
-    --glass-border-light: rgba(255,255,255,1);
+    --glass-bg: rgba(255, 255, 255, 0.5);
+    --glass-hover-bg: rgba(255, 255, 255, 0.75);
+    --glass-border: rgba(255, 255, 255, 0.6);
+    --glass-border-light: rgba(255, 255, 255, 0.9);
 }
 
 * {
@@ -124,10 +124,11 @@ body {
     filter: drop-shadow(0 4px 10px rgba(0,0,0,0.3));
 }
 [data-theme="light"] .time {
-    background: linear-gradient(to bottom, #111827, #4b5563);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    filter: drop-shadow(0 4px 10px rgba(0,0,0,0.15));
+    background: none;
+    -webkit-background-clip: unset;
+    -webkit-text-fill-color: #111827;
+    text-shadow: 0 2px 4px rgba(255,255,255,0.5);
+    filter: none;
 }
 .ampm { font-size: 1.4rem; margin-left: 8px; font-weight: 500; opacity: 0.9; letter-spacing: 0; }
 
@@ -142,10 +143,11 @@ body {
     filter: drop-shadow(0 2px 8px rgba(0,0,0,0.4));
 }
 [data-theme="light"] .greeting {
-    background: linear-gradient(135deg, #111827 0%, #4b5563 100%);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    filter: drop-shadow(0 2px 8px rgba(0,0,0,0.15));
+    background: none;
+    -webkit-background-clip: unset;
+    -webkit-text-fill-color: #111827;
+    text-shadow: 0 1px 3px rgba(255,255,255,0.5);
+    filter: none;
 }
 
 .search-container { width: 100%; max-width: 600px; }
@@ -160,14 +162,13 @@ body {
     color: var(--text-primary); font-size: 1.15rem; font-family: inherit; font-weight: 400; outline: none;
     backdrop-filter: blur(24px); -webkit-backdrop-filter: blur(24px);
     box-shadow: 0 8px 32px var(--shadow); 
-    transform: translate(var(--dx, 0px), var(--dy, 0px)) scale(var(--scale, 1));
-    transition: background 0.4s, border-color 0.4s, box-shadow 0.4s, fill 0.4s;
+    transition: all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
 }
 #search-input::placeholder { color: var(--text-secondary); opacity: 0.8; }
 #search-input:focus { 
     background: var(--glass-hover-bg); 
     border-color: var(--accent); 
-    --scale: 1.02;
+    transform: scale(1.02);
     box-shadow: 0 15px 40px var(--shadow), 0 0 20px rgba(123, 97, 255, 0.3); 
 }
 #search-input:focus + .search-icon, .input-wrapper:focus-within .search-icon { fill: var(--accent); transform: scale(1.1); }
@@ -183,17 +184,22 @@ body {
     color: var(--text-primary); text-decoration: none;
     font-size: 0.85rem; font-weight: 500; 
     backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
-    transform: translate(var(--dx, 0px), var(--dy, 0px)) scale(var(--scale, 1));
-    transition: background 0.3s, border-color 0.3s, box-shadow 0.3s; cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1); cursor: pointer;
     box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
 }
 .shortcut:hover { 
-    --scale: 1.02;
-    transform: translate(var(--dx, 0px), calc(var(--dy, 0px) - 8px)) scale(var(--scale, 1.02)); 
+    transform: translateY(-8px) scale(1.02); 
     background: var(--glass-hover-bg);
     border-color: var(--accent);
     box-shadow: 0 15px 35px rgba(0, 0, 0, 0.2), 0 0 15px rgba(123, 97, 255, 0.4); 
     color: var(--text-primary); 
+}
+.shortcut span {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 90%;
+    text-align: center;
 }
 .shortcut img, .shortcut svg { 
     width: 34px; height: 34px; margin-bottom: 10px; border-radius: 4px;
