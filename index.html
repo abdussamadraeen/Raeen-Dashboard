@@ -9,7 +9,16 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
 </head>
-<body>
+<body data-theme="dark">
+    <!-- 5026 AD Noosphere Layer -->
+    <div class="noosphere-status" id="cdi-bar">
+        <div class="cdi-label">CIVILIZATION DEVELOPMENT INDEX: TYPE II TRANSITION</div>
+        <div class="cdi-progress-container">
+            <div class="cdi-progress" style="width: 73.4%;"></div>
+        </div>
+        <div class="cdi-value">CDI: 2.14 // SUPERTREND: ASCENDING</div>
+    </div>
+
     <!-- Background Elements -->
     <div id="background-layer" class="background-layer"></div>
     <canvas id="canvas-layer" class="background-layer hidden"></canvas>
@@ -31,6 +40,7 @@
             <div class="apps-tabs">
                 <button class="app-tab active" data-target="google-apps">Google</button>
                 <button class="app-tab" data-target="ms-apps">Microsoft</button>
+                <button class="app-tab" data-target="ai-apps">AI Models</button>
                 <button class="app-tab" data-target="custom-apps">Custom</button>
             </div>
             
@@ -39,6 +49,10 @@
             </div>
 
             <div id="ms-apps" class="apps-grid app-pane">
+                <!-- Rendered dynamically -->
+            </div>
+            
+            <div id="ai-apps" class="apps-grid app-pane">
                 <!-- Rendered dynamically -->
             </div>
 
@@ -303,6 +317,15 @@
                                 </label>
                             </div>
                         </div>
+                        <div class="card-container mt-4">
+                            <div class="settings-row" style="border-bottom: none;">
+                                <span>Noosphere CDI Bar</span>
+                                <label class="switch">
+                                    <input type="checkbox" id="show-noosphere-toggle" checked>
+                                    <span class="slider round"></span>
+                                </label>
+                            </div>
+                        </div>
                     </div>
 
                     <!-- Search Tab -->
@@ -350,6 +373,36 @@
                                     <span class="custom-radio"></span>
                                     <img src="https://chatgpt.com/favicon.ico" class="engine-icon" alt=""> ChatGPT
                                 </label>
+                                <label class="radio-item mt-2">
+                                    <input type="radio" name="search_engine" value="gemini">
+                                    <span class="custom-radio"></span>
+                                    <img src="https://gemini.google.com/favicon.ico" class="engine-icon" alt=""> Gemini
+                                </label>
+                                <label class="radio-item mt-2">
+                                    <input type="radio" name="search_engine" value="claude">
+                                    <span class="custom-radio"></span>
+                                    <img src="https://claude.ai/favicon.ico" class="engine-icon" alt=""> Claude
+                                </label>
+                                <label class="radio-item mt-2">
+                                    <input type="radio" name="search_engine" value="perplexity">
+                                    <span class="custom-radio"></span>
+                                    <img src="https://www.perplexity.ai/favicon.ico" class="engine-icon" alt=""> Perplexity
+                                </label>
+                            </div>
+                        </div>
+
+                        <div class="settings-group">
+                            <label>Custom Search Engine</label>
+                            <div class="card-container" style="padding: 16px;">
+                                <label class="radio-item">
+                                    <input type="radio" name="search_engine" value="custom_engine">
+                                    <span class="custom-radio"></span>
+                                    Use Custom Engine
+                                </label>
+                                <div id="custom-engine-input-group" class="mt-4" style="display: block;">
+                                    <p class="subtext mb-2">Enter search URL with <strong>%s</strong> as placeholder for query.</p>
+                                    <input type="text" id="custom-search-url" class="text-input" placeholder="https://www.google.com/search?q=%s">
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -428,10 +481,17 @@
                     <!-- Cards Tab -->
                     <div id="tab-cards" class="tab-pane">
                         <div class="card-container">
-                            <div class="settings-row" style="border-bottom: none;">
+                            <div class="settings-row">
                                 <span>Show Cards</span>
                                 <label class="switch">
                                     <input type="checkbox" id="toggle-cards">
+                                    <span class="slider round"></span>
+                                </label>
+                            </div>
+                            <div class="settings-row" style="border-bottom: none;">
+                                <span>Hide All UI (Immersive)</span>
+                                <label class="switch">
+                                    <input type="checkbox" id="show-main-ui-toggle" checked>
                                     <span class="slider round"></span>
                                 </label>
                             </div>

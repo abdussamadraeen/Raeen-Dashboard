@@ -61,21 +61,20 @@
         googleApps: [
             { name: 'Account', url: 'https://myaccount.google.com/', icon: 'https://www.gstatic.com/images/branding/product/2x/googleg_96dp.png' },
             { name: 'Search', url: 'https://www.google.com/', icon: 'https://www.gstatic.com/images/branding/product/2x/googleg_96dp.png' },
-            { name: 'Maps', url: 'https://maps.google.com/', icon: 'https://www.gstatic.com/images/branding/product/2x/maps_96dp.png' },
-            { name: 'YouTube', url: 'https://www.gstatic.com/images/branding/product/2x/youtube_96dp.png' },
+            { name: 'YouTube', url: 'https://www.youtube.com/', icon: 'https://www.gstatic.com/images/branding/product/2x/youtube_96dp.png' },
             { name: 'Gmail', url: 'https://mail.google.com/', icon: 'https://www.gstatic.com/images/branding/product/2x/gmail_96dp.png' },
             { name: 'Drive', url: 'https://drive.google.com/', icon: 'https://www.gstatic.com/images/branding/product/2x/drive_2020q4_96dp.png' },
-            { name: 'Calendar', url: 'https://calendar.google.com/', icon: 'https://ssl.gstatic.com/calendar/images/dynamiclogo_2020q4/calendar_31_v2.png' },
-            { name: 'Photos', url: 'https://photos.google.com/', icon: 'https://www.gstatic.com/images/branding/product/2x/photos_96dp.png' },
-            { name: 'Meet', url: 'https://meet.google.com/', icon: 'https://www.gstatic.com/images/branding/product/2x/meet_2020q4_96dp.png' }
+            { name: 'Gemini', url: 'https://gemini.google.com/', icon: 'https://www.gstatic.com/images/branding/product/2x/gemini_96dp.png' }
         ],
         msApps: [
-            { name: 'Microsoft 365', url: 'https://www.microsoft365.com/', icon: 'https://res.cdn.office.net/officehub/images/content/images/favicon-8f211ea639.ico' },
-            { name: 'Outlook', url: 'https://outlook.live.com/', icon: 'https://outlook.live.com/favicon.ico' },
-            { name: 'OneDrive', url: 'https://onedrive.live.com/', icon: 'https://onedrive.live.com/favicon.ico' },
-            { name: 'Teams', url: 'https://teams.microsoft.com/', icon: 'https://statics.teams.cdn.office.net/hashedassets-m/favicon/favicon.ico' },
-            { name: 'OneNote', url: 'https://www.onenote.com/', icon: 'https://www.onenote.com/favicon.ico' },
-            { name: 'To Do', url: 'https://to-do.microsoft.com/', icon: 'https://to-do.microsoft.com/favicon.ico' }
+            { name: 'Copilot', url: 'https://copilot.microsoft.com/', icon: 'https://upload.wikimedia.org/wikipedia/commons/2/2a/Microsoft_365_Copilot_Icon.svg' },
+            { name: 'Outlook', url: 'https://outlook.live.com/', icon: 'https://upload.wikimedia.org/wikipedia/commons/d/df/Microsoft_Office_Outlook_%282018%E2%80%93present%29.svg' },
+            { name: 'OneDrive', url: 'https://onedrive.live.com/', icon: 'https://upload.wikimedia.org/wikipedia/commons/3/3c/Microsoft_OneDrive_logo.svg' }
+        ],
+        aiApps: [
+            { name: 'ChatGPT', url: 'https://chatgpt.com/', icon: 'https://chatgpt.com/favicon.ico' },
+            { name: 'Perplexity', url: 'https://www.perplexity.ai/', icon: 'https://www.perplexity.ai/favicon.ico' },
+            { name: 'Claude', url: 'https://claude.ai/', icon: 'https://claude.ai/images/favicon-96x96.png' }
         ],
         customApps: [],
         showClock: true,
@@ -84,7 +83,10 @@
         showCardDate: true,
         showCardFocus: true,
         showCardNote: true,
-        canvasStyle: 'neural'
+        showNoosphereBar: true,
+        showMainUI: true,
+        canvasStyle: 'neural',
+        customSearchUrl: 'https://www.google.com/search?q=%s'
     };
 
     let settings = { ...defaultSettings };
@@ -123,6 +125,9 @@
 
     // --- Categorized Theme Library ---
     const themeLibrary = {
+        fifth_millennium: [
+            "belgium.png"
+        ],
         abstract: [
             "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=1920&q=80",
             "https://images.unsplash.com/photo-1550684848-fac1c5b4e853?w=1920&q=80",
@@ -181,7 +186,11 @@
         'duckduckgo': { action: 'https://duckduckgo.com/', param: 'q' },
         'brave': { action: 'https://search.brave.com/search', param: 'q' },
         'bing': { action: 'https://www.bing.com/search', param: 'q' },
-        'chatgpt': { action: 'https://chatgpt.com/', param: 'q' }
+        'chatgpt': { action: 'https://chatgpt.com/', param: 'q' },
+        'gemini': { action: 'https://gemini.google.com/app', param: 'q' },
+        'claude': { action: 'https://claude.ai/chat', param: 'q' },
+        'perplexity': { action: 'https://www.perplexity.ai/', param: 'q' },
+        'custom_engine': { action: '', param: '' }
     };
 
     // --- DOM Elements Cache (O(1) lookups) ---
@@ -206,6 +215,9 @@
         tabPanes: document.querySelectorAll('.tab-pane'),
         themeRadios: document.getElementsByName('theme_preference'),
         bgTypeSelect: document.getElementById('bg-type-select'),
+        cdiBar: document.getElementById('cdi-bar'),
+        showNoosphereToggle: document.getElementById('show-noosphere-toggle'),
+        showMainUIToggle: document.getElementById('show-main-ui-toggle'),
         bgCanvasOptions: document.getElementById('bg-canvas-options'),
         canvasStyleSelect: document.getElementById('canvas-style-select'),
         bgBingOptions: document.getElementById('bg-bing-options'),
@@ -215,6 +227,7 @@
         bgCustomOptions: document.getElementById('bg-custom-options'),
         bgColorPicker: document.getElementById('bg-color-picker'),
         bgCustomUrl: document.getElementById('bg-custom-url'),
+        bingGallery: document.getElementById('bing-gallery'),
         colorSwatches: document.querySelectorAll('.color-swatch'),
         localFileInput: document.getElementById('bg-local-file'),
         galleryGrid: document.getElementById('gallery-grid'),
@@ -254,6 +267,7 @@
         appPanes: document.querySelectorAll('.app-pane'),
         googleAppsGrid: document.getElementById('google-apps'),
         msAppsGrid: document.getElementById('ms-apps'),
+        aiAppsGrid: document.getElementById('ai-apps'),
         customAppsGrid: document.getElementById('custom-apps'),
         addAppBtn: document.getElementById('add-app-btn'),
         addAppModal: document.getElementById('add-app-modal'),
@@ -261,7 +275,8 @@
         saveAppBtn: document.getElementById('save-app-btn'),
         appNameInput: document.getElementById('app-name'),
         appUrlInput: document.getElementById('app-url'),
-        appIconInput: document.getElementById('app-icon')
+        appIconInput: document.getElementById('app-icon'),
+        customSearchUrlInput: document.getElementById('custom-search-url')
     };
 
     // --- Render Gallery ---
@@ -543,23 +558,50 @@
             if (dom.bgLayer) {
                 dom.bgLayer.innerHTML = '';
                 const v = settings.backgroundValue;
-                const applyBg = (url) => { dom.bgLayer.style.background = `url('${url}') no-repeat center center / cover`; };
+                const applyBg = (url) => { 
+                    dom.bgLayer.style.backgroundImage = `url('${url}')`; 
+                    dom.bgLayer.style.backgroundRepeat = 'no-repeat';
+                    dom.bgLayer.style.backgroundPosition = 'center';
+                    dom.bgLayer.style.backgroundSize = 'cover';
+                };
                 
                 if (t === 'bing') {
-                    if (settings.backgroundValue && settings.backgroundValue.includes('bing.com')) {
-                        applyBg(settings.backgroundValue);
-                    } else {
+                    try {
                         const lang = navigator.language || 'en-US';
                         const d = new Date();
                         const todayStr = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
-                        applyBg(`https://bing.biturl.top/?resolution=1920&format=image&index=0&mkt=${lang}&cb=${todayStr}`);
+                        const latestUrl = `https://bing.biturl.top/?resolution=1920&format=image&index=0&mkt=${lang}&cb=${todayStr}`;
+                        
+                        if (settings.backgroundValue === 'bing_latest' || !settings.backgroundValue || !settings.backgroundValue.includes('bing')) {
+                            applyBg(latestUrl);
+                            console.log('✓ Bing wallpaper loaded: latest');
+                        } else {
+                            applyBg(settings.backgroundValue);
+                            console.log('✓ Bing wallpaper loaded: custom');
+                        }
+                    } catch(e) {
+                        console.error('Bing background error:', e);
+                        dom.bgLayer.style.background = 'var(--bg-body)';
                     }
                 } else if (t === 'preset') {
                     const img = new Image();
-                    img.onload = () => applyBg(v);
+                    img.onload = () => {
+                        applyBg(v);
+                        console.log('✓ Preset background loaded');
+                    };
+                    img.onerror = () => {
+                        console.warn('Preset background failed to load, using fallback');
+                        dom.bgLayer.style.background = 'var(--bg-body)';
+                    };
                     img.src = v;
                 } else if (t === 'solid') {
-                    dom.bgLayer.style.background = v;
+                    try {
+                        dom.bgLayer.style.background = v;
+                        console.log('✓ Solid background applied');
+                    } catch(e) {
+                        console.error('Solid background error:', e);
+                        dom.bgLayer.style.background = 'var(--bg-body)';
+                    }
                 } else if (t === 'local') {
                     loadLocalMedia().then(file => {
                         if (file) {
@@ -567,12 +609,26 @@
                             if (file.type && file.type.startsWith('video/')) {
                                 dom.bgLayer.style.background = 'none';
                                 const video = document.createElement('video');
-                                video.src = source; video.autoplay = true; video.loop = true; video.muted = true;
+                                video.src = source; 
+                                video.autoplay = true; 
+                                video.loop = true; 
+                                video.muted = true;
+                                video.style.width = '100%';
+                                video.style.height = '100%';
+                                video.style.objectFit = 'cover';
                                 dom.bgLayer.appendChild(video);
+                                console.log('✓ Local video background loaded');
                             } else {
                                 applyBg(source);
+                                console.log('✓ Local image background loaded');
                             }
+                        } else {
+                            console.warn('No local media found, using fallback');
+                            dom.bgLayer.style.background = 'var(--bg-body)';
                         }
+                    }).catch(err => {
+                        console.error('Local media error:', err);
+                        dom.bgLayer.style.background = 'var(--bg-body)';
                     });
                 } else if (t === 'custom' && v) {
                     dom.bgLayer.style.background = 'var(--bg-body)';
@@ -582,18 +638,35 @@
                     if (ytMatch) {
                         const videoId = ytMatch[1];
                         dom.bgLayer.innerHTML = `<iframe width="100%" height="100%" src="https://www.youtube.com/embed/${videoId}?autoplay=1&mute=1&controls=0&showinfo=0&rel=0&loop=1&playlist=${videoId}" frameborder="0" allow="autoplay; encrypted-media" style="position:absolute; width:100vw; height:56.25vw; min-height:100vh; min-width:177.77vh; top:50%; left:50%; transform:translate(-50%, -50%); pointer-events:none;"></iframe>`;
+                        console.log('✓ YouTube background loaded');
                     } else if (v.match(/\.(mp4|webm|ogg)$/i)) {
-                        const video = document.createElement('video');
-                        video.src = v;
-                        video.autoplay = true;
-                        video.muted = true;
-                        video.loop = true;
-                        dom.bgLayer.appendChild(video);
+                        try {
+                            const video = document.createElement('video');
+                            video.src = v;
+                            video.autoplay = true;
+                            video.muted = true;
+                            video.loop = true;
+                            video.style.width = '100%';
+                            video.style.height = '100%';
+                            video.style.objectFit = 'cover';
+                            dom.bgLayer.appendChild(video);
+                            video.onerror = () => {
+                                console.error('Video background failed to load');
+                                dom.bgLayer.innerHTML = '';
+                                dom.bgLayer.style.background = 'var(--bg-body)';
+                            };
+                            console.log('✓ Custom video background loaded');
+                        } catch(e) {
+                            console.error('Video background error:', e);
+                            dom.bgLayer.style.background = 'var(--bg-body)';
+                        }
                     } else {
-                        const applyBg = (url) => { dom.bgLayer.style.backgroundImage = `url('${url}')`; };
                         const img = new Image();
                         img.onload = () => applyBg(v);
-                        img.onerror = () => applyBg(v); // Fallback if preloader is blocked by CORS
+                        img.onerror = () => {
+                            console.warn('Custom image background failed, using fallback');
+                            dom.bgLayer.style.background = 'var(--bg-body)';
+                        };
                         img.src = v;
                     }
                 } else {
@@ -651,6 +724,21 @@
         if (dom.toggleCardDate) dom.toggleCardDate.checked = settings.showCardDate !== false;
         if (dom.toggleCardFocus) dom.toggleCardFocus.checked = settings.showCardFocus !== false;
         if (dom.toggleCardNote) dom.toggleCardNote.checked = settings.showCardNote !== false;
+
+        // CDI Bar Toggle
+        if (dom.showNoosphereToggle) dom.showNoosphereToggle.checked = settings.showNoosphereBar;
+        if (dom.cdiBar) dom.cdiBar.classList.toggle('hidden', !settings.showNoosphereBar);
+
+        // Immersive Mode
+        if (dom.showMainUIToggle) dom.showMainUIToggle.checked = settings.showMainUI;
+        const mainUI = [dom.searchWidget, dom.topSitesWidget, dom.cardsWidget, dom.clockWidget];
+        mainUI.forEach(el => {
+            if (el) el.classList.toggle('immersive-hidden', !settings.showMainUI);
+        });
+        document.body.classList.toggle('immersive-mode', !settings.showMainUI);
+
+        // Custom Search Engine UI Sync
+        if (dom.customSearchUrlInput) dom.customSearchUrlInput.value = settings.customSearchUrl || '';
     }
 
     // --- Static Event Listeners ---
@@ -667,12 +755,18 @@
             const query = dom.searchInput.value.trim();
             if (!query) return;
 
-            const engine = engines[settings.searchEngine] || engines['google'];
-            const isAI = ['chatgpt'].includes(settings.searchEngine);
-            
-            const redirectUrl = isAI
-                ? engine.action + '?q=' + encodeURIComponent(query)
-                : engine.action + '?' + engine.param + '=' + encodeURIComponent(query);
+            let redirectUrl;
+            if (settings.searchEngine === 'custom_engine') {
+                const baseUrl = settings.customSearchUrl || 'https://www.google.com/search?q=%s';
+                redirectUrl = baseUrl.replace('%s', encodeURIComponent(query));
+            } else {
+                const engine = engines[settings.searchEngine] || engines['google'];
+                const isAI = ['chatgpt', 'gemini', 'claude', 'perplexity'].includes(settings.searchEngine);
+                
+                redirectUrl = isAI
+                    ? engine.action + (engine.action.includes('?') ? '&' : '?') + (engine.param || 'q') + '=' + encodeURIComponent(query)
+                    : engine.action + '?' + engine.param + '=' + encodeURIComponent(query);
+            }
 
             window.location.href = redirectUrl;
         });
@@ -706,8 +800,8 @@
                         return;
                     }
                     
-                    dom.searchSuggestions.innerHTML = suggestions.slice(0, 6).map((s, i) => 
-                        `<li class="suggestion-item" data-index="${i}">
+                    dom.searchSuggestions.innerHTML = suggestions.map((s, i) => 
+                        `<li class="suggestion-item" data-index="${i}" style="--item-index: ${i}">
                             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
                             ${s}
                         </li>`
@@ -829,11 +923,14 @@
     if (dom.toggleSearch) dom.toggleSearch.addEventListener('change', (e) => { settings.showSearch = e.target.checked; saveSettings(); });
     if (dom.toggleTopSites) dom.toggleTopSites.addEventListener('change', (e) => { settings.showTopSites = e.target.checked; saveSettings(); });
     if (dom.toggleClock) dom.toggleClock.addEventListener('change', (e) => { settings.showClock = e.target.checked; saveSettings(); });
+    if (dom.showNoosphereToggle) dom.showNoosphereToggle.addEventListener('change', (e) => { settings.showNoosphereBar = e.target.checked; saveSettings(); });
+    if (dom.showMainUIToggle) dom.showMainUIToggle.addEventListener('change', (e) => { settings.showMainUI = e.target.checked; saveSettings(); });
     if (dom.clockFormatSelect) dom.clockFormatSelect.addEventListener('change', (e) => { settings.clockFormat = e.target.value; saveSettings(); });
     if (dom.toggleCards) dom.toggleCards.addEventListener('change', (e) => { settings.showCards = e.target.checked; saveSettings(); });
     if (dom.toggleCardDate) dom.toggleCardDate.addEventListener('change', (e) => { settings.showCardDate = e.target.checked; saveSettings(); });
     if (dom.toggleCardFocus) dom.toggleCardFocus.addEventListener('change', (e) => { settings.showCardFocus = e.target.checked; saveSettings(); });
     if (dom.toggleCardNote) dom.toggleCardNote.addEventListener('change', (e) => { settings.showCardNote = e.target.checked; saveSettings(); });
+    if (dom.customSearchUrlInput) dom.customSearchUrlInput.addEventListener('change', (e) => { settings.customSearchUrl = e.target.value; saveSettings(); });
 
     // Shortcuts
     if (dom.addShortcutBtn) {
@@ -1222,10 +1319,12 @@
     function renderApps() {
         if (!settings.googleApps) settings.googleApps = defaultSettings.googleApps;
         if (!settings.msApps) settings.msApps = defaultSettings.msApps;
+        if (!settings.aiApps) settings.aiApps = defaultSettings.aiApps;
         if (!settings.customApps) settings.customApps = [];
         
         renderAppsTab(settings.googleApps, dom.googleAppsGrid, 'googleApps');
         renderAppsTab(settings.msApps, dom.msAppsGrid, 'msApps');
+        renderAppsTab(settings.aiApps, dom.aiAppsGrid, 'aiApps');
         renderAppsTab(settings.customApps, dom.customAppsGrid, 'customApps');
     }
 
@@ -1300,60 +1399,98 @@
         try {
             const lang = navigator.language || 'en-US';
             const bingUrl = `https://www.bing.com/HPImageArchive.aspx?format=js&idx=0&n=8&mkt=${lang}`;
-            let data;
+            let data = null;
+            
+            // Try primary API first
             try {
-                const res = await fetch(bingUrl);
-                if (!res.ok) throw new Error('Bing request failed');
-                data = await res.json();
+                const res = await fetch(bingUrl, { 
+                    mode: 'cors',
+                    credentials: 'omit'
+                });
+                if (res.ok) {
+                    data = await res.json();
+                    console.log('✓ Bing API loaded successfully');
+                }
             } catch(e) {
-                // Fallback to Peapix API if CORS is blocked
-                const countryCode = lang.split('-')[1] ? lang.split('-')[1].toLowerCase() : 'us';
-                const fallbackUrl = `https://peapix.com/bing/feed?country=${countryCode}`;
-                const proxyUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(fallbackUrl)}`;
-                
-                const res = await fetch(proxyUrl);
-                if (!res.ok) throw new Error('Proxy fallback failed');
-                const proxyData = await res.json();
-                const peapixData = JSON.parse(proxyData.contents);
+                console.warn('Bing API failed:', e.message);
+            }
+            
+            // Fallback: Use local auto-update + a static placeholder
+            if (!data || !data.images || data.images.length === 0) {
+                console.log('Using Bing auto-update fallback');
                 data = {
-                    images: peapixData.map(img => {
-                        const fullUrl = img.imageUrl.startsWith('http') ? img.imageUrl : `https://www.bing.com${img.imageUrl}`;
-                        return {
-                            url: fullUrl,
-                            urlbase: fullUrl.replace('_1920x1080.jpg', ''),
-                            copyright: img.title || 'Bing Wallpaper'
-                        };
-                    })
+                    images: [
+                        {
+                            url: 'https://bing.biturl.top/?resolution=1920&format=image&index=0&mkt=en-US',
+                            urlbase: 'https://bing.biturl.top/',
+                            copyright: 'Daily Bing Wallpaper'
+                        },
+                        {
+                            url: 'https://bing.biturl.top/?resolution=1920&format=image&index=1&mkt=en-US',
+                            urlbase: 'https://bing.biturl.top/',
+                            copyright: 'Bing Wallpaper (Yesterday)'
+                        }
+                    ]
                 };
             }
+
             dom.bingGallery.innerHTML = '';
             
-            if (!data.images || data.images.length === 0) {
-                dom.bingGallery.innerHTML = '<p class="subtext">No images found.</p>';
-                return;
-            }
-
-            data.images.forEach(image => {
-                const imgUrl = image.url;
-                const thumbUrl = `${image.urlbase}_320x240.jpg`;
-                
-                const thumb = document.createElement('img');
-                thumb.src = thumbUrl;
-                thumb.className = 'bing-thumb';
-                thumb.title = image.copyright;
-                if (settings.backgroundValue === imgUrl) thumb.classList.add('active');
-                
-                thumb.addEventListener('click', () => {
-                    document.querySelectorAll('.bing-thumb').forEach(t => t.classList.remove('active'));
-                    thumb.classList.add('active');
-                    settings.backgroundValue = imgUrl;
-                    saveSettings();
-                });
-                dom.bingGallery.appendChild(thumb);
+            // Add "Always Latest" option at the beginning
+            const latestBtn = document.createElement('div');
+            latestBtn.className = 'bing-thumb latest-bing-thumb';
+            latestBtn.innerHTML = '<div style="height:100%;display:flex;align-items:center;justify-content:center;text-align:center;font-size:0.7rem;font-weight:600;padding:4px;">AUTO-UPDATE WALLPAPER</div>';
+            latestBtn.title = 'Always show today\'s Bing wallpaper';
+            if (settings.backgroundValue === 'bing_latest' || !settings.backgroundValue || !settings.backgroundValue.includes('bing.com')) latestBtn.classList.add('active');
+            latestBtn.addEventListener('click', () => {
+                document.querySelectorAll('.bing-thumb').forEach(t => t.classList.remove('active'));
+                latestBtn.classList.add('active');
+                settings.backgroundValue = 'bing_latest';
+                saveSettings();
             });
+            dom.bingGallery.appendChild(latestBtn);
+
+            if (data && data.images && Array.isArray(data.images)) {
+                data.images.forEach((image, idx) => {
+                    try {
+                        const imgUrl = image.url || image.imageUrl;
+                        let thumbUrl = imgUrl;
+                        
+                        // Generate thumbnail URL properly
+                        if (image.urlbase) {
+                            thumbUrl = `${image.urlbase}_320x240.jpg`;
+                        } else if (imgUrl.includes('bing.biturl.top')) {
+                            thumbUrl = imgUrl + '&size=320x240'; // Fallback sizing
+                        }
+                        
+                        const thumb = document.createElement('img');
+                        thumb.src = thumbUrl;
+                        thumb.className = 'bing-thumb';
+                        thumb.title = image.copyright || image.title || 'Bing Wallpaper';
+                        if (settings.backgroundValue === imgUrl) thumb.classList.add('active');
+                        
+                        thumb.addEventListener('click', () => {
+                            document.querySelectorAll('.bing-thumb').forEach(t => t.classList.remove('active'));
+                            thumb.classList.add('active');
+                            settings.backgroundValue = imgUrl;
+                            saveSettings();
+                        });
+                        
+                        // Error handling for thumbnail loading
+                        thumb.onerror = () => {
+                            console.warn('Bing thumbnail failed to load:', thumbUrl);
+                            thumb.style.opacity = '0.5';
+                        };
+                        
+                        dom.bingGallery.appendChild(thumb);
+                    } catch(itemError) {
+                        console.error('Error adding Bing gallery item:', itemError);
+                    }
+                });
+            }
         } catch (error) {
-            dom.bingGallery.innerHTML = '<span style="color:var(--danger)">Failed to load Bing gallery.</span>';
             console.error('Bing Gallery Error:', error);
+            dom.bingGallery.innerHTML = '<span style="color:var(--danger); padding: 8px;">Failed to load Bing gallery. Using auto-update.</span>';
         }
     }
 
@@ -1369,4 +1506,5 @@
     renderNotesList();
     setInterval(updateTime, 1000);
     if (settings.showSearch && dom.searchInput) dom.searchInput.focus();
+    if (settings.backgroundType === 'bing') loadBingGallery();
 })();
