@@ -665,3 +665,1180 @@ input:checked + .slider:before { transform: translateX(20px); }
 .app-item:hover .remove-app-btn { display: flex; }
 
 
+/* ═══════════════════════════════════════════════════════════════════════ */
+/* ──────────────────────── RESPONSIVE DESIGN ──────────────────────────── */
+/* ═════════════════════════════════════════════════════════════════════════ */
+
+/* ─── Tablets (768px - 1024px) ─── */
+@media (max-width: 1024px) {
+    .container {
+        max-width: 100%;
+        gap: 32px;
+        padding: 16px;
+    }
+
+    .search-container {
+        max-width: 100%;
+    }
+
+    .quick-links {
+        max-width: 100%;
+        gap: 10px;
+    }
+
+    .shortcut {
+        width: 84px;
+        height: 84px;
+        font-size: 0.75rem;
+    }
+
+    .shortcut img, .shortcut svg {
+        width: 28px;
+        height: 28px;
+        margin-bottom: 6px;
+    }
+
+    .cards-container {
+        max-width: 100%;
+        grid-template-columns: 1fr;
+        max-height: none;
+    }
+
+    .cards-left {
+        width: 100%;
+        flex-direction: row;
+        gap: 10px;
+    }
+
+    .info-card {
+        flex: 1;
+        min-width: 0;
+    }
+
+    .modal-container {
+        width: 95%;
+        height: 90vh;
+        max-height: 700px;
+    }
+
+    .modal-sidebar {
+        width: 160px;
+    }
+
+    .modal-content {
+        padding: 20px;
+    }
+
+    .grid-options {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .apps-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .top-left-widget {
+        top: 20px;
+        left: 20px;
+    }
+
+    .time {
+        font-size: 3.5rem;
+    }
+
+    .top-right-widget {
+        top: 20px;
+        right: 20px;
+    }
+
+    .settings-btn {
+        bottom: 20px;
+        right: 20px;
+    }
+
+    body {
+        padding-top: 3vh;
+        padding-bottom: 3vh;
+    }
+
+    .apps-dropdown {
+        width: 280px;
+    }
+
+    .source-cards-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* ─── Large Tablets (768px portrait / 1024px landscape) ─── */
+@media (max-width: 768px) {
+    .container {
+        gap: 24px;
+        padding: 12px;
+    }
+
+    .top-left-widget {
+        position: static;
+        order: -1;
+        width: 100%;
+        text-align: center;
+        margin-bottom: 16px;
+        padding: 0;
+    }
+
+    .time {
+        font-size: 2.8rem;
+        justify-content: center;
+    }
+
+    .top-right-widget {
+        position: static;
+        order: -0.5;
+        width: 100%;
+        text-align: right;
+        margin-bottom: 12px;
+        padding: 0 12px;
+    }
+
+    .icon-btn {
+        width: 40px;
+        height: 40px;
+    }
+
+    .icon-btn svg {
+        width: 20px;
+        height: 20px;
+    }
+
+    .search-container {
+        max-width: 100%;
+    }
+
+    #search-input {
+        padding: 14px 20px 14px 48px;
+        font-size: 1rem;
+    }
+
+    .quick-links {
+        gap: 8px;
+        max-width: 100%;
+    }
+
+    .shortcut {
+        width: 72px;
+        height: 72px;
+        font-size: 0.7rem;
+        border-radius: 16px;
+    }
+
+    .shortcut img, .shortcut svg {
+        width: 24px;
+        height: 24px;
+        margin-bottom: 4px;
+    }
+
+    .shortcut span {
+        max-width: 80%;
+        line-height: 1.2;
+    }
+
+    .cards-container {
+        max-width: 100%;
+        grid-template-columns: 1fr;
+        gap: 10px;
+    }
+
+    .cards-left {
+        flex-direction: row;
+        gap: 8px;
+    }
+
+    .info-card {
+        padding: 12px;
+        gap: 6px;
+    }
+
+    .info-card-value {
+        font-size: 1.2rem;
+    }
+
+    .focus-controls {
+        gap: 4px;
+    }
+
+    .focus-btn {
+        padding: 4px 8px;
+        font-size: 0.65rem;
+    }
+
+    .notes-panel {
+        min-height: 200px;
+        max-height: 240px;
+    }
+
+    .notes-header {
+        padding: 10px 12px;
+    }
+
+    .note-editor-title {
+        font-size: 1rem;
+        padding: 10px 12px 2px;
+    }
+
+    .note-editor-body {
+        font-size: 0.85rem;
+        padding: 2px 12px 10px;
+    }
+
+    .modal-overlay {
+        padding: 12px;
+    }
+
+    .modal-container {
+        width: 100%;
+        height: auto;
+        max-height: 85vh;
+    }
+
+    .modal-body {
+        flex-direction: column;
+    }
+
+    .modal-sidebar {
+        width: 100%;
+        border-right: none;
+        border-bottom: 1px solid var(--border);
+        display: flex;
+        overflow-x: auto;
+        padding: 0;
+    }
+
+    .sidebar-tab {
+        flex-shrink: 0;
+        border-left: none;
+        border-bottom: 2px solid transparent;
+        padding: 10px 12px;
+        white-space: nowrap;
+    }
+
+    .sidebar-tab.active {
+        border-left: none;
+        border-bottom-color: var(--accent);
+        background: transparent;
+    }
+
+    .modal-content {
+        padding: 16px;
+        max-height: 60vh;
+    }
+
+    .grid-options {
+        grid-template-columns: repeat(2, 1fr);
+        max-height: 250px;
+    }
+
+    .bg-option {
+        height: 70px;
+    }
+
+    .custom-select, .text-input {
+        padding: 10px 12px;
+        font-size: 0.88rem;
+    }
+
+    .primary-btn {
+        padding: 10px 16px;
+        font-size: 0.9rem;
+    }
+
+    .apps-grid {
+        grid-template-columns: repeat(2, 1fr);
+        padding: 12px;
+        gap: 10px;
+    }
+
+    .app-item {
+        padding: 8px 2px;
+    }
+
+    .app-item span {
+        font-size: 0.7rem;
+    }
+
+    .app-item img {
+        width: 32px;
+        height: 32px;
+    }
+
+    .apps-dropdown {
+        width: 100%;
+        max-width: 280px;
+        right: 0;
+        left: 0;
+        margin: 0 auto;
+    }
+
+    .apps-tabs {
+        font-size: 0.8rem;
+    }
+
+    .app-tab {
+        padding: 10px 0;
+    }
+
+    .settings-btn {
+        width: 40px;
+        height: 40px;
+        bottom: 16px;
+        right: 16px;
+    }
+
+    .settings-btn svg {
+        width: 18px;
+        height: 18px;
+    }
+
+    .noosphere-status {
+        width: 3px;
+        padding: 12px 0;
+    }
+
+    .noosphere-status:hover {
+        width: 28px;
+    }
+
+    .cdi-label, .cdi-value {
+        font-size: 8px;
+        letter-spacing: 1.5px;
+    }
+
+    body {
+        padding-top: 2vh;
+        padding-bottom: 2vh;
+    }
+
+    .source-cards-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .managed-item {
+        padding: 8px 10px;
+        font-size: 0.85rem;
+    }
+
+    .managed-item-actions button {
+        padding: 4px 8px;
+        font-size: 0.7rem;
+    }
+}
+
+/* ─── Small Tablets & Large Phones (600px - 768px) ─── */
+@media (max-width: 600px) {
+    .container {
+        gap: 16px;
+        padding: 8px;
+    }
+
+    .search-icon {
+        width: 18px;
+        height: 18px;
+        left: 16px;
+    }
+
+    #search-input {
+        padding: 12px 18px 12px 44px;
+        font-size: 0.95rem;
+        border-radius: 32px;
+    }
+
+    .quick-links {
+        gap: 6px;
+    }
+
+    .shortcut {
+        width: 64px;
+        height: 64px;
+        font-size: 0.65rem;
+    }
+
+    .shortcut img, .shortcut svg {
+        width: 20px;
+        height: 20px;
+        margin-bottom: 3px;
+    }
+
+    .time {
+        font-size: 2.2rem;
+    }
+
+    .top-left-widget {
+        margin-bottom: 12px;
+    }
+
+    .top-right-widget {
+        margin-bottom: 8px;
+    }
+
+    .cards-left {
+        gap: 6px;
+    }
+
+    .info-card {
+        padding: 10px;
+        border-radius: 14px;
+        min-width: 0;
+        flex: 1;
+    }
+
+    .info-card-header {
+        gap: 8px;
+    }
+
+    .info-card-icon {
+        width: 24px;
+        height: 24px;
+    }
+
+    .info-card-title {
+        font-size: 0.7rem;
+    }
+
+    .info-card-value {
+        font-size: 1rem;
+    }
+
+    .info-card-sub {
+        font-size: 0.75rem;
+    }
+
+    .focus-btn {
+        padding: 3px 6px;
+        font-size: 0.6rem;
+    }
+
+    .notes-count {
+        font-size: 0.6rem;
+        padding: 0 5px;
+    }
+
+    .notes-panel {
+        min-height: 180px;
+        max-height: 220px;
+    }
+
+    .notes-header {
+        padding: 8px 10px;
+    }
+
+    .notes-title {
+        font-size: 0.85rem;
+    }
+
+    .note-card-title {
+        font-size: 0.8rem;
+    }
+
+    .note-card-preview {
+        font-size: 0.68rem;
+    }
+
+    .note-editor-title {
+        font-size: 0.95rem;
+        padding: 8px 10px 2px;
+    }
+
+    .note-editor-body {
+        font-size: 0.82rem;
+        padding: 2px 10px 8px;
+    }
+
+    .note-editor-footer {
+        padding: 6px 10px;
+    }
+
+    .note-char-count {
+        font-size: 0.65rem;
+    }
+
+    .modal-container {
+        border-radius: 16px;
+    }
+
+    .modal-header {
+        padding: 16px 16px;
+    }
+
+    .modal-header h2 {
+        font-size: 1.05rem;
+    }
+
+    .modal-content {
+        padding: 14px;
+        font-size: 0.85rem;
+    }
+
+    .sidebar-tab {
+        font-size: 0.8rem;
+        padding: 10px 10px;
+    }
+
+    .tab-icon {
+        width: 14px;
+        height: 14px;
+    }
+
+    .card-container {
+        margin-bottom: 16px;
+    }
+
+    .settings-row {
+        padding: 10px 0;
+        font-size: 0.85rem;
+    }
+
+    .custom-select, .text-input {
+        padding: 9px 10px;
+        font-size: 0.85rem;
+    }
+
+    .primary-btn {
+        padding: 9px 14px;
+        font-size: 0.85rem;
+    }
+
+    .color-swatch {
+        width: 36px;
+        height: 36px;
+    }
+
+    .grid-options {
+        grid-template-columns: repeat(2, 1fr);
+        max-height: 200px;
+        gap: 8px;
+    }
+
+    .bg-option {
+        height: 60px;
+        border-radius: 8px;
+    }
+
+    .apps-grid {
+        grid-template-columns: repeat(2, 1fr);
+        padding: 10px;
+        gap: 8px;
+        max-height: 280px;
+    }
+
+    .app-item {
+        padding: 6px 2px;
+    }
+
+    .app-item span {
+        font-size: 0.65rem;
+    }
+
+    .app-item img, .app-item .icon-placeholder {
+        width: 28px;
+        height: 28px;
+        margin-bottom: 4px;
+    }
+
+    .apps-dropdown {
+        max-width: 260px;
+    }
+
+    .apps-tabs {
+        font-size: 0.75rem;
+    }
+
+    .settings-btn {
+        width: 36px;
+        height: 36px;
+        bottom: 12px;
+        right: 12px;
+    }
+
+    .settings-btn svg {
+        width: 16px;
+        height: 16px;
+    }
+
+    .managed-item {
+        padding: 7px 8px;
+        font-size: 0.8rem;
+    }
+
+    .managed-item-actions button {
+        padding: 3px 6px;
+        font-size: 0.65rem;
+    }
+
+    body {
+        padding-top: 1vh;
+        padding-bottom: 1vh;
+    }
+}
+
+/* ─── Phones (480px and below) ─── */
+@media (max-width: 480px) {
+    .container {
+        gap: 12px;
+        padding: 6px;
+    }
+
+    .search-icon {
+        width: 16px;
+        height: 16px;
+        left: 14px;
+    }
+
+    #search-input {
+        padding: 11px 16px 11px 40px;
+        font-size: 0.9rem;
+        border-radius: 28px;
+    }
+
+    #search-input::placeholder {
+        font-size: 0.85rem;
+    }
+
+    .quick-links {
+        gap: 5px;
+        max-width: 100%;
+    }
+
+    .shortcut {
+        width: 56px;
+        height: 56px;
+        font-size: 0.6rem;
+        border-radius: 12px;
+    }
+
+    .shortcut img, .shortcut svg {
+        width: 18px;
+        height: 18px;
+        margin-bottom: 2px;
+    }
+
+    .shortcut span {
+        max-width: 85%;
+    }
+
+    .time {
+        font-size: 1.8rem;
+        letter-spacing: -1px;
+    }
+
+    .top-left-widget {
+        margin-bottom: 8px;
+    }
+
+    .top-right-widget {
+        margin-bottom: 4px;
+    }
+
+    .cards-container {
+        gap: 8px;
+    }
+
+    .cards-left {
+        flex-direction: column;
+        gap: 8px;
+    }
+
+    .info-card {
+        padding: 10px;
+        border-radius: 12px;
+    }
+
+    .info-card-header {
+        gap: 6px;
+    }
+
+    .info-card-icon {
+        width: 22px;
+        height: 22px;
+    }
+
+    .info-card-icon svg {
+        width: 12px;
+        height: 12px;
+    }
+
+    .info-card-title {
+        font-size: 0.65rem;
+        letter-spacing: 0.3px;
+    }
+
+    .info-card-value {
+        font-size: 0.95rem;
+    }
+
+    .info-card-sub {
+        font-size: 0.7rem;
+    }
+
+    .info-card-content {
+        gap: 4px;
+    }
+
+    .focus-controls {
+        gap: 3px;
+    }
+
+    .focus-btn {
+        padding: 3px 5px;
+        font-size: 0.55rem;
+        border-radius: 6px;
+    }
+
+    .notes-header {
+        padding: 8px 8px;
+        flex-wrap: wrap;
+        gap: 8px;
+    }
+
+    .notes-header-left {
+        gap: 6px;
+    }
+
+    .notes-title {
+        font-size: 0.8rem;
+    }
+
+    .notes-count {
+        font-size: 0.55rem;
+        padding: 0 4px;
+    }
+
+    .notes-add-btn {
+        padding: 4px 8px;
+        font-size: 0.7rem;
+    }
+
+    .notes-panel {
+        min-height: 160px;
+        max-height: 200px;
+        border-radius: 14px;
+    }
+
+    .note-card-title {
+        font-size: 0.75rem;
+    }
+
+    .note-card-preview {
+        font-size: 0.65rem;
+    }
+
+    .note-card-meta {
+        font-size: 0.6rem;
+    }
+
+    .note-editor-title {
+        font-size: 0.9rem;
+        padding: 8px 8px 2px;
+    }
+
+    .note-editor-body {
+        font-size: 0.8rem;
+        padding: 2px 8px 8px;
+        line-height: 1.5;
+    }
+
+    .note-editor-footer {
+        padding: 5px 8px;
+    }
+
+    .note-char-count {
+        font-size: 0.6rem;
+    }
+
+    .modal-overlay {
+        padding: 8px;
+    }
+
+    .modal-container {
+        width: 100%;
+        height: auto;
+        max-height: 88vh;
+        border-radius: 14px;
+    }
+
+    .modal-header {
+        padding: 14px 12px;
+    }
+
+    .modal-header h2 {
+        font-size: 1rem;
+    }
+
+    .close-btn {
+        font-size: 1.3rem;
+    }
+
+    .modal-body {
+        flex-direction: column;
+    }
+
+    .modal-sidebar {
+        width: 100%;
+        border-right: none;
+        border-bottom: 1px solid var(--border);
+        display: flex;
+        overflow-x: auto;
+        scroll-behavior: smooth;
+    }
+
+    .sidebar-tab {
+        font-size: 0.75rem;
+        padding: 8px 8px;
+        gap: 6px;
+    }
+
+    .tab-icon {
+        width: 12px;
+        height: 12px;
+    }
+
+    .modal-content {
+        padding: 12px;
+        max-height: 55vh;
+        overflow-y: auto;
+    }
+
+    .settings-row {
+        padding: 8px 0;
+        font-size: 0.8rem;
+    }
+
+    .settings-group {
+        margin-top: 14px;
+    }
+
+    .settings-group > label {
+        font-size: 0.75rem;
+    }
+
+    .subtext {
+        font-size: 0.78rem;
+    }
+
+    .custom-select, .text-input {
+        padding: 8px 9px;
+        font-size: 0.82rem;
+    }
+
+    .primary-btn {
+        padding: 8px 12px;
+        font-size: 0.8rem;
+    }
+
+    .color-palette {
+        gap: 8px;
+    }
+
+    .color-swatch {
+        width: 32px;
+        height: 32px;
+        border-radius: 8px;
+    }
+
+    .grid-options {
+        grid-template-columns: repeat(2, 1fr);
+        max-height: 180px;
+        gap: 6px;
+    }
+
+    .bg-option {
+        height: 50px;
+        border-radius: 6px;
+    }
+
+    .radio-item {
+        font-size: 0.85rem;
+        padding: 6px 10px;
+    }
+
+    .custom-radio {
+        width: 16px;
+        height: 16px;
+        margin-right: 10px;
+    }
+
+    .apps-grid {
+        grid-template-columns: 2fr 2fr;
+        padding: 8px;
+        gap: 6px;
+        max-height: 260px;
+    }
+
+    .app-item {
+        padding: 5px 1px;
+    }
+
+    .app-item span {
+        font-size: 0.6rem;
+        line-height: 1.1;
+    }
+
+    .app-item img, .app-item .icon-placeholder {
+        width: 24px;
+        height: 24px;
+        margin-bottom: 3px;
+    }
+
+    .app-item .icon-placeholder {
+        font-size: 0.9rem;
+    }
+
+    .apps-dropdown {
+        max-width: 240px;
+        max-height: 70vh;
+    }
+
+    .apps-tabs {
+        font-size: 0.7rem;
+    }
+
+    .app-tab {
+        padding: 8px 0;
+    }
+
+    .settings-btn {
+        width: 32px;
+        height: 32px;
+        bottom: 10px;
+        right: 10px;
+    }
+
+    .settings-btn svg {
+        width: 14px;
+        height: 14px;
+    }
+
+    .noosphere-status {
+        width: 2px;
+    }
+
+    .noosphere-status:hover {
+        width: 24px;
+    }
+
+    .cdi-label, .cdi-value {
+        font-size: 7px;
+        letter-spacing: 1px;
+    }
+
+    .managed-item {
+        padding: 6px 8px;
+        font-size: 0.75rem;
+    }
+
+    .managed-item-actions button {
+        padding: 2px 6px;
+        font-size: 0.6rem;
+    }
+
+    .managed-list {
+        gap: 4px;
+    }
+
+    .card-container {
+        margin-bottom: 14px;
+    }
+
+    /* Touch-friendly focus states for mobile */
+    .shortcut:active,
+    .primary-btn:active,
+    .app-item:active {
+        transform: scale(0.98);
+    }
+
+    body {
+        height: 100vh;
+        overflow-y: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+}
+
+/* ─── Extra Small Phones (< 380px) ─── */
+@media (max-width: 380px) {
+    .quick-links {
+        gap: 4px;
+    }
+
+    .shortcut {
+        width: 50px;
+        height: 50px;
+        font-size: 0.55rem;
+    }
+
+    .shortcut img, .shortcut svg {
+        width: 16px;
+        height: 16px;
+    }
+
+    .time {
+        font-size: 1.5rem;
+    }
+
+    .info-card {
+        padding: 8px;
+    }
+
+    .info-card-value {
+        font-size: 0.85rem;
+    }
+
+    .modal-header h2 {
+        font-size: 0.95rem;
+    }
+
+    .sidebar-tab {
+        padding: 6px 6px;
+        font-size: 0.7rem;
+    }
+
+    .modal-content {
+        padding: 10px;
+    }
+
+    .grid-options {
+        max-height: 160px;
+        gap: 4px;
+    }
+
+    .bg-option {
+        height: 45px;
+    }
+
+    .apps-grid {
+        grid-template-columns: 2fr 2fr;
+        padding: 6px;
+        gap: 4px;
+    }
+
+    .app-item {
+        padding: 3px 1px;
+    }
+
+    .app-item img, .app-item .icon-placeholder {
+        width: 20px;
+        height: 20px;
+        margin-bottom: 2px;
+    }
+
+    .custom-select, .text-input {
+        font-size: 0.8rem;
+        padding: 7px 8px;
+    }
+
+    .primary-btn {
+        font-size: 0.75rem;
+        padding: 7px 10px;
+    }
+}
+
+/* ─── Landscape Mode Adjustments ─── */
+@media (max-height: 500px) and (orientation: landscape) {
+    .container {
+        gap: 12px;
+        padding: 8px;
+    }
+
+    .top-left-widget {
+        position: absolute;
+        top: 8px;
+        left: 8px;
+    }
+
+    .time {
+        font-size: 1.4rem;
+    }
+
+    .cards-container {
+        max-height: 160px;
+    }
+
+    .info-card {
+        padding: 8px;
+    }
+
+    .notes-panel {
+        min-height: 140px;
+        max-height: 160px;
+    }
+
+    .quick-links {
+        gap: 4px;
+        max-height: 80px;
+    }
+
+    .shortcut {
+        width: 52px;
+        height: 52px;
+        font-size: 0.6rem;
+    }
+
+    .shortcut img, .shortcut svg {
+        width: 18px;
+        height: 18px;
+        margin-bottom: 2px;
+    }
+
+    .modal-content {
+        max-height: 300px;
+    }
+
+    .settings-row {
+        padding: 6px 0;
+    }
+}
+
+/* ─── iPad & Large Tablets (1025px+) ─── */
+@media (min-width: 1025px) {
+    .top-left-widget {
+        position: absolute;
+        top: 30px;
+        left: 40px;
+    }
+
+    .top-right-widget {
+        position: absolute;
+        top: 30px;
+        right: 40px;
+    }
+
+    .icon-btn {
+        transition: all 0.3s ease;
+    }
+
+    .icon-btn:hover {
+        transform: scale(1.1);
+    }
+
+    .shortcut {
+        transition: all 0.4s cubic-bezier(0.2, 0.8, 0.2, 1);
+    }
+
+    .shortcut:hover {
+        transform: translateY(-8px) scale(1.08);
+        box-shadow: 0 20px 40px rgba(123, 97, 255, 0.25);
+    }
+}
+
+/* ─── Print Styles ─── */
+@media print {
+    .settings-btn,
+    .top-right-widget,
+    .modal-overlay {
+        display: none !important;
+    }
+
+    body {
+        background: white;
+        color: black;
+    }
+}
+
+
