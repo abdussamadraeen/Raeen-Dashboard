@@ -10,7 +10,9 @@
     "topSites"
   ],
   "host_permissions": [
-    "https://suggestqueries.google.com/*"
+    "https://suggestqueries.google.com/*",
+    "https://*.bing.com/*",
+    "https://bing.biturl.top/*"
   ],
   "content_scripts": [
     {

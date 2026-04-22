@@ -58,6 +58,26 @@
             { name: 'Kaggle', url: 'https://kaggle.com', icon: 'https://www.kaggle.com/static/images/favicon.ico' },
             { name: 'Ecommerce', url: 'http://localhost:3000', icon: '' }
         ],
+        googleApps: [
+            { name: 'Account', url: 'https://myaccount.google.com/', icon: 'https://www.google.com/favicon.ico' },
+            { name: 'Search', url: 'https://www.google.com/', icon: 'https://www.google.com/favicon.ico' },
+            { name: 'Maps', url: 'https://maps.google.com/', icon: 'https://maps.google.com/favicon.ico' },
+            { name: 'YouTube', url: 'https://www.youtube.com/', icon: 'https://www.youtube.com/favicon.ico' },
+            { name: 'Gmail', url: 'https://mail.google.com/', icon: 'https://ssl.gstatic.com/ui/v1/icons/mail/rfr/gmail.ico' },
+            { name: 'Drive', url: 'https://drive.google.com/', icon: 'https://ssl.gstatic.com/images/branding/product/1x/drive_2020q4_32dp.png' },
+            { name: 'Calendar', url: 'https://calendar.google.com/', icon: 'https://ssl.gstatic.com/calendar/images/dynamiclogo_2020q4/calendar_31_v2.png' },
+            { name: 'Photos', url: 'https://photos.google.com/', icon: 'https://ssl.gstatic.com/images/branding/product/1x/photos_2020q4_32dp.png' },
+            { name: 'Meet', url: 'https://meet.google.com/', icon: 'https://ssl.gstatic.com/images/branding/product/1x/meet_2020q4_32dp.png' }
+        ],
+        msApps: [
+            { name: 'Microsoft 365', url: 'https://www.microsoft365.com/', icon: 'https://res.cdn.office.net/officehub/images/content/images/favicon-8f211ea639.ico' },
+            { name: 'Outlook', url: 'https://outlook.live.com/', icon: 'https://outlook.live.com/favicon.ico' },
+            { name: 'OneDrive', url: 'https://onedrive.live.com/', icon: 'https://onedrive.live.com/favicon.ico' },
+            { name: 'Teams', url: 'https://teams.microsoft.com/', icon: 'https://statics.teams.cdn.office.net/hashedassets-m/favicon/favicon.ico' },
+            { name: 'OneNote', url: 'https://www.onenote.com/', icon: 'https://www.onenote.com/favicon.ico' },
+            { name: 'To Do', url: 'https://to-do.microsoft.com/', icon: 'https://to-do.microsoft.com/favicon.ico' }
+        ],
+        customApps: [],
         showClock: true,
         clockFormat: 'auto',
         showCards: false,
@@ -73,6 +93,16 @@
     try {
         const saved = localStorage.getItem('abdus_dashboard_settings');
         if (saved) settings = { ...settings, ...JSON.parse(saved) };
+        
+        // Migration: Fix broken YouTube icons
+        if (settings.googleApps) {
+            settings.googleApps.forEach(app => {
+                if (app.name === 'YouTube' && app.icon && app.icon.includes('1000885e')) {
+                    app.icon = 'https://www.youtube.com/favicon.ico';
+                }
+            });
+            saveSettings();
+        }
     } catch (e) { 
         console.warn('Storage denied. Running in ephemeral mode.'); 
     }
@@ -210,7 +240,21 @@
         noteEditorBody: document.getElementById('note-editor-body'),
         noteCharCount: document.getElementById('note-char-count'),
         noteSaveStatus: document.getElementById('note-save-status'),
-        noteDeleteBtn: document.getElementById('note-delete-btn')
+        noteDeleteBtn: document.getElementById('note-delete-btn'),
+        appsLauncherBtn: document.getElementById('apps-launcher-btn'),
+        appsDropdown: document.getElementById('apps-dropdown'),
+        appTabs: document.querySelectorAll('.app-tab'),
+        appPanes: document.querySelectorAll('.app-pane'),
+        googleAppsGrid: document.getElementById('google-apps'),
+        msAppsGrid: document.getElementById('ms-apps'),
+        customAppsGrid: document.getElementById('custom-apps'),
+        addAppBtn: document.getElementById('add-app-btn'),
+        addAppModal: document.getElementById('add-app-modal'),
+        closeAddAppBtn: document.getElementById('close-add-app-btn'),
+        saveAppBtn: document.getElementById('save-app-btn'),
+        appNameInput: document.getElementById('app-name'),
+        appUrlInput: document.getElementById('app-url'),
+        appIconInput: document.getElementById('app-icon')
     };
 
     // --- Render Gallery ---
@@ -482,8 +526,14 @@
                 const applyBg = (url) => { dom.bgLayer.style.background = `url('${url}') no-repeat center center / cover`; };
                 
                 if (t === 'bing') {
-                    const todayStr = new Date().toISOString().split('T')[0];
-                    applyBg(`https://bing.biturl.top/?resolution=1920&format=image&index=0&mkt=en-US&cb=${todayStr}`);
+                    if (settings.backgroundValue && settings.backgroundValue.includes('bing.com')) {
+                        applyBg(settings.backgroundValue);
+                    } else {
+                        const lang = navigator.language || 'en-US';
+                        const d = new Date();
+                        const todayStr = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+                        applyBg(`https://bing.biturl.top/?resolution=1920&format=image&index=0&mkt=${lang}&cb=${todayStr}`);
+                    }
                 } else if (t === 'preset') {
                     const img = new Image();
                     img.onload = () => applyBg(v);
@@ -1046,7 +1096,198 @@
         });
     }
 
+    // --- Apps Launcher Logic ---
+    function getDomainForApp(urlStr) {
+        try { return new URL(urlStr).hostname; } catch(e) { return urlStr; }
+    }
+
+    let draggedItemIndex = null;
+    let draggedArrayName = null;
+
+    function renderAppsTab(appsArray, containerElement, arrayName) {
+        if (!containerElement) return;
+        containerElement.innerHTML = '';
+        if (!appsArray) return;
+        appsArray.forEach((app, index) => {
+            const a = document.createElement('a');
+            a.href = app.url;
+            a.className = 'app-item';
+            a.setAttribute('draggable', 'true');
+            
+            const img = document.createElement('img');
+            img.src = app.icon || `https://www.google.com/s2/favicons?domain=${getDomainForApp(app.url)}&sz=128`;
+            img.alt = app.name;
+            img.onerror = () => { 
+                img.style.display = 'none'; 
+                const placeholder = document.createElement('div');
+                placeholder.className = 'icon-placeholder';
+                placeholder.textContent = app.name.charAt(0).toUpperCase();
+                a.insertBefore(placeholder, span);
+            };
+            a.appendChild(img);
+            
+            const span = document.createElement('span');
+            span.textContent = app.name;
+            a.appendChild(span);
+            
+            const removeBtn = document.createElement('button');
+            removeBtn.className = 'remove-app-btn';
+            removeBtn.innerHTML = '&times;';
+            removeBtn.title = 'Remove';
+            removeBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                settings[arrayName].splice(index, 1);
+                saveSettings();
+                renderApps();
+            });
+            a.appendChild(removeBtn);
+            
+            a.addEventListener('dragstart', (e) => {
+                draggedItemIndex = index;
+                draggedArrayName = arrayName;
+                setTimeout(() => a.classList.add('dragging'), 0);
+            });
+            a.addEventListener('dragend', () => {
+                a.classList.remove('dragging');
+                draggedItemIndex = null;
+                draggedArrayName = null;
+                containerElement.querySelectorAll('.app-item').forEach(i => i.classList.remove('drag-over'));
+            });
+            a.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                if (draggedArrayName === arrayName) {
+                    a.classList.add('drag-over');
+                }
+            });
+            a.addEventListener('dragleave', () => {
+                a.classList.remove('drag-over');
+            });
+            a.addEventListener('drop', (e) => {
+                e.preventDefault();
+                a.classList.remove('drag-over');
+                if (draggedArrayName === arrayName && draggedItemIndex !== null && draggedItemIndex !== index) {
+                    const arr = settings[arrayName];
+                    const item = arr.splice(draggedItemIndex, 1)[0];
+                    arr.splice(index, 0, item);
+                    saveSettings();
+                    renderApps();
+                }
+            });
+
+            containerElement.appendChild(a);
+        });
+    }
+
+    function renderApps() {
+        if (!settings.googleApps) settings.googleApps = defaultSettings.googleApps;
+        if (!settings.msApps) settings.msApps = defaultSettings.msApps;
+        if (!settings.customApps) settings.customApps = [];
+        
+        renderAppsTab(settings.googleApps, dom.googleAppsGrid, 'googleApps');
+        renderAppsTab(settings.msApps, dom.msAppsGrid, 'msApps');
+        renderAppsTab(settings.customApps, dom.customAppsGrid, 'customApps');
+    }
+
+    let activeAppTab = 'google-apps';
+
+    if (dom.appsLauncherBtn && dom.appsDropdown) {
+        dom.appsLauncherBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            dom.appsDropdown.classList.toggle('hidden');
+        });
+
+        document.addEventListener('click', (e) => {
+            if (!dom.appsDropdown.contains(e.target) && e.target !== dom.appsLauncherBtn) {
+                dom.appsDropdown.classList.add('hidden');
+            }
+        });
+
+        dom.appTabs.forEach(tab => {
+            tab.addEventListener('click', (e) => {
+                e.stopPropagation(); // Keep dropdown open
+                dom.appTabs.forEach(t => t.classList.remove('active'));
+                dom.appPanes.forEach(p => p.classList.remove('active'));
+                tab.classList.add('active');
+                const targetId = tab.dataset.target;
+                activeAppTab = targetId;
+                const targetPane = document.getElementById(targetId);
+                if (targetPane) targetPane.classList.add('active');
+            });
+        });
+    }
+
+    if (dom.addAppBtn) {
+        dom.addAppBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            if (dom.addAppModal) dom.addAppModal.classList.remove('hidden');
+        });
+    }
+    if (dom.closeAddAppBtn) {
+        dom.closeAddAppBtn.addEventListener('click', () => {
+            if (dom.addAppModal) dom.addAppModal.classList.add('hidden');
+        });
+    }
+    if (dom.saveAppBtn) {
+        dom.saveAppBtn.addEventListener('click', () => {
+            const name = dom.appNameInput.value.trim();
+            let url = dom.appUrlInput.value.trim();
+            const iconUrl = dom.appIconInput.value.trim();
+            if (name && url) {
+                if (!/^https?:\/\//i.test(url)) url = 'http://' + url;
+                
+                let targetArray = 'googleApps';
+                if (activeAppTab === 'ms-apps') targetArray = 'msApps';
+                else if (activeAppTab === 'custom-apps') targetArray = 'customApps';
+                
+                if (!settings[targetArray]) settings[targetArray] = [];
+                settings[targetArray].push({ name, url, icon: iconUrl });
+                saveSettings();
+                
+                dom.appNameInput.value = '';
+                dom.appUrlInput.value = '';
+                if(dom.appIconInput) dom.appIconInput.value = '';
+                dom.addAppModal.classList.add('hidden');
+                renderApps();
+            }
+        });
+    }
+
+    // --- Bing Gallery Functionality ---
+    async function loadBingGallery() {
+        if (!dom.bingGallery) return;
+        dom.bingGallery.innerHTML = 'Loading...';
+        try {
+            const lang = navigator.language || 'en-US';
+            const res = await fetch(`https://www.bing.com/HPImageArchive.aspx?format=js&idx=0&n=8&mkt=${lang}`);
+            const data = await res.json();
+            dom.bingGallery.innerHTML = '';
+            
+            data.images.forEach(image => {
+                const imgUrl = `https://www.bing.com${image.url}`;
+                const thumb = document.createElement('img');
+                thumb.src = `https://www.bing.com${image.urlbase}_320x240.jpg`;
+                thumb.className = 'bing-thumb';
+                thumb.title = image.copyright;
+                if (settings.backgroundValue === imgUrl) thumb.classList.add('active');
+                
+                thumb.addEventListener('click', () => {
+                    document.querySelectorAll('.bing-thumb').forEach(t => t.classList.remove('active'));
+                    thumb.classList.add('active');
+                    settings.backgroundValue = imgUrl;
+                    saveSettings();
+                    applySettings();
+                });
+                dom.bingGallery.appendChild(thumb);
+            });
+        } catch (error) {
+            dom.bingGallery.innerHTML = '<span style="color:var(--danger)">Failed to load Bing gallery.</span>';
+            console.error('Bing Gallery Error:', error);
+        }
+    }
+
     // --- Initialization ---
+    renderApps();
     CanvasEngine.init(dom.canvasLayer);
     renderGallery();
     applySettings();
