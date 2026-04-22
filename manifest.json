@@ -12,7 +12,9 @@
   "host_permissions": [
     "https://suggestqueries.google.com/*",
     "https://*.bing.com/*",
-    "https://bing.biturl.top/*"
+    "https://bing.biturl.top/*",
+    "https://peapix.com/*",
+    "https://api.allorigins.win/*"
   ],
   "content_scripts": [
     {

@@ -59,15 +59,15 @@
             { name: 'Ecommerce', url: 'http://localhost:3000', icon: '' }
         ],
         googleApps: [
-            { name: 'Account', url: 'https://myaccount.google.com/', icon: 'https://www.google.com/favicon.ico' },
-            { name: 'Search', url: 'https://www.google.com/', icon: 'https://www.google.com/favicon.ico' },
-            { name: 'Maps', url: 'https://maps.google.com/', icon: 'https://maps.google.com/favicon.ico' },
-            { name: 'YouTube', url: 'https://www.youtube.com/', icon: 'https://www.youtube.com/favicon.ico' },
-            { name: 'Gmail', url: 'https://mail.google.com/', icon: 'https://ssl.gstatic.com/ui/v1/icons/mail/rfr/gmail.ico' },
-            { name: 'Drive', url: 'https://drive.google.com/', icon: 'https://ssl.gstatic.com/images/branding/product/1x/drive_2020q4_32dp.png' },
+            { name: 'Account', url: 'https://myaccount.google.com/', icon: 'https://www.gstatic.com/images/branding/product/2x/googleg_96dp.png' },
+            { name: 'Search', url: 'https://www.google.com/', icon: 'https://www.gstatic.com/images/branding/product/2x/googleg_96dp.png' },
+            { name: 'Maps', url: 'https://maps.google.com/', icon: 'https://www.gstatic.com/images/branding/product/2x/maps_96dp.png' },
+            { name: 'YouTube', url: 'https://www.gstatic.com/images/branding/product/2x/youtube_96dp.png' },
+            { name: 'Gmail', url: 'https://mail.google.com/', icon: 'https://www.gstatic.com/images/branding/product/2x/gmail_96dp.png' },
+            { name: 'Drive', url: 'https://drive.google.com/', icon: 'https://www.gstatic.com/images/branding/product/2x/drive_2020q4_96dp.png' },
             { name: 'Calendar', url: 'https://calendar.google.com/', icon: 'https://ssl.gstatic.com/calendar/images/dynamiclogo_2020q4/calendar_31_v2.png' },
-            { name: 'Photos', url: 'https://photos.google.com/', icon: 'https://ssl.gstatic.com/images/branding/product/1x/photos_2020q4_32dp.png' },
-            { name: 'Meet', url: 'https://meet.google.com/', icon: 'https://ssl.gstatic.com/images/branding/product/1x/meet_2020q4_32dp.png' }
+            { name: 'Photos', url: 'https://photos.google.com/', icon: 'https://www.gstatic.com/images/branding/product/2x/photos_96dp.png' },
+            { name: 'Meet', url: 'https://meet.google.com/', icon: 'https://www.gstatic.com/images/branding/product/2x/meet_2020q4_96dp.png' }
         ],
         msApps: [
             { name: 'Microsoft 365', url: 'https://www.microsoft365.com/', icon: 'https://res.cdn.office.net/officehub/images/content/images/favicon-8f211ea639.ico' },
@@ -112,9 +112,12 @@
     }
 
     function saveSettings(noApply = false) {
+        if (!settings) return; // Prevent early calls
         try {
             localStorage.setItem('abdus_dashboard_settings', JSON.stringify(settings));
-        } catch (e) { console.error('Failed to save settings', e); }
+        } catch (e) { 
+            console.warn('Storage blocked by browser settings - using session memory.'); 
+        }
         if (!noApply) applySettings();
     }
 
@@ -317,19 +320,24 @@
         };
 
         // Helper to render a single shortcut
-        const renderShortcut = (sc) => {
+        const renderShortcut = (sc, index = 0) => {
             const a = document.createElement('a');
             a.href = sc.url;
             a.className = 'shortcut';
+            a.style.setProperty('--item-index', index);
             
             const img = document.createElement('img');
             let iconUrl = sc.icon;
-            if (iconUrl && iconUrl.includes('s2/favicons')) iconUrl = null;
-            img.src = iconUrl || `https://icon.horse/icon/${getDomain(sc.url)}`;
+            
+            // Tiered loading strategy: icon.horse -> s2/favicons -> placeholder
+            const primaryUrl = iconUrl || `https://icon.horse/icon/${getDomain(sc.url)}`;
+            const fallbackUrl = `https://www.google.com/s2/favicons?domain_url=${encodeURIComponent(sc.url)}&sz=128`;
+            
+            img.src = primaryUrl;
             img.alt = sc.name;
             img.onerror = () => { 
-                if (img.src.includes('icon.horse')) {
-                    img.src = `https://www.google.com/s2/favicons?domain=${getDomain(sc.url)}&sz=128`;
+                if (img.src === primaryUrl) {
+                    img.src = fallbackUrl;
                 } else {
                     img.style.display='none'; 
                     a.prepend(createIconPlaceholder(sc.name)); 
@@ -345,7 +353,7 @@
 
         // Render manual shortcuts if setting is 'favorites' or 'frequently_visited'
         if (settings.topSitesSource === 'favorites') {
-            settings.shortcuts.forEach(renderShortcut);
+            settings.shortcuts.forEach((sc, index) => renderShortcut(sc, index));
             dom.topSitesWidget.appendChild(widgetFragment);
         } else {
             // Fetch and append chrome history (top sites)
@@ -360,10 +368,9 @@
                     const cleanUrl = site.url.replace(/\/$/, '');
                     if (!existingUrls.has(cleanUrl)) {
                         // Shorten name if it's too long
-                        let title = site.title || cleanUrl;
+                        let title = site.title || site.url;
                         if (title.length > 15) title = title.substring(0, 15) + '...';
-                        
-                        renderShortcut({ name: title, url: site.url, icon: '' });
+                        renderShortcut({ name: title, url: site.url, icon: '' }, addedCount);
                         addedCount++;
                     }
                 }
@@ -789,13 +796,15 @@
     if (dom.engineRadios) Array.from(dom.engineRadios).forEach(r => r.addEventListener('change', (e) => { if(e.target.checked) { settings.searchEngine = e.target.value; saveSettings(); } }));
     if (dom.topsitesSourceRadios) Array.from(dom.topsitesSourceRadios).forEach(r => r.addEventListener('change', (e) => { if(e.target.checked) { settings.topSitesSource = e.target.value; saveSettings(); } }));
     if (dom.bgTypeSelect) dom.bgTypeSelect.addEventListener('change', (e) => {
-        settings.backgroundType = e.target.value;
-        if (settings.backgroundType === 'preset') {
+        const type = e.target.value;
+        settings.backgroundType = type;
+        if (type === 'preset') {
             const firstAvailable = document.querySelector('.bg-option');
             settings.backgroundValue = firstAvailable ? firstAvailable.dataset.url : Object.values(themeLibrary)[0][0];
         }
-        else if (settings.backgroundType === 'solid' && dom.colorSwatches.length) settings.backgroundValue = dom.colorSwatches[0].dataset.color;
-        else if (settings.backgroundType === 'custom') settings.backgroundValue = dom.bgCustomUrl ? dom.bgCustomUrl.value : '';
+        else if (type === 'solid' && dom.colorSwatches.length) settings.backgroundValue = dom.colorSwatches[0].dataset.color;
+        else if (type === 'custom') settings.backgroundValue = dom.bgCustomUrl ? dom.bgCustomUrl.value : '';
+        else if (type === 'bing') loadBingGallery();
         saveSettings();
     });
     if (dom.canvasStyleSelect) dom.canvasStyleSelect.addEventListener('change', (e) => {
@@ -1133,15 +1142,20 @@
         appsArray.forEach((app, index) => {
             const a = document.createElement('a');
             a.href = app.url;
-            a.className = 'app-item';
+            a.className = 'app-item shortcut';
+            a.style.setProperty('--item-index', index);
             a.setAttribute('draggable', 'true');
             
             const img = document.createElement('img');
-            img.src = app.icon || `https://icon.horse/icon/${getDomainForApp(app.url)}`;
+            let appIconUrl = app.icon;
+            const primaryAppUrl = appIconUrl || `https://icon.horse/icon/${getDomainForApp(app.url)}`;
+            const fallbackAppUrl = `https://www.google.com/s2/favicons?domain_url=${encodeURIComponent(app.url)}&sz=128`;
+
+            img.src = primaryAppUrl;
             img.alt = app.name;
             img.onerror = () => { 
-                if (img.src.includes('icon.horse')) {
-                    img.src = `https://www.google.com/s2/favicons?domain=${getDomainForApp(app.url)}&sz=128`;
+                if (img.src === primaryAppUrl) {
+                    img.src = fallbackAppUrl;
                 } else {
                     img.style.display = 'none'; 
                     const placeholder = document.createElement('div');
@@ -1292,24 +1306,36 @@
                 if (!res.ok) throw new Error('Bing request failed');
                 data = await res.json();
             } catch(e) {
-                // Fallback to Peapix API if CORS is blocked (e.g. testing locally)
+                // Fallback to Peapix API if CORS is blocked
                 const countryCode = lang.split('-')[1] ? lang.split('-')[1].toLowerCase() : 'us';
-                const res = await fetch(`https://peapix.com/bing/feed?country=${countryCode}`);
-                if (!res.ok) throw new Error('Peapix fallback failed');
-                const peapixData = await res.json();
+                const fallbackUrl = `https://peapix.com/bing/feed?country=${countryCode}`;
+                const proxyUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(fallbackUrl)}`;
+                
+                const res = await fetch(proxyUrl);
+                if (!res.ok) throw new Error('Proxy fallback failed');
+                const proxyData = await res.json();
+                const peapixData = JSON.parse(proxyData.contents);
                 data = {
-                    images: peapixData.map(img => ({
-                        url: img.imageUrl.replace('https://www.bing.com', ''),
-                        urlbase: img.imageUrl.replace('_1920x1080.jpg', '').replace('https://www.bing.com', ''),
-                        copyright: img.title
-                    }))
+                    images: peapixData.map(img => {
+                        const fullUrl = img.imageUrl.startsWith('http') ? img.imageUrl : `https://www.bing.com${img.imageUrl}`;
+                        return {
+                            url: fullUrl,
+                            urlbase: fullUrl.replace('_1920x1080.jpg', ''),
+                            copyright: img.title || 'Bing Wallpaper'
+                        };
+                    })
                 };
             }
             dom.bingGallery.innerHTML = '';
             
+            if (!data.images || data.images.length === 0) {
+                dom.bingGallery.innerHTML = '<p class="subtext">No images found.</p>';
+                return;
+            }
+
             data.images.forEach(image => {
-                const imgUrl = image.url.startsWith('http') ? image.url : `https://www.bing.com${image.url}`;
-                const thumbUrl = image.urlbase.startsWith('http') ? `${image.urlbase}_320x240.jpg` : `https://www.bing.com${image.urlbase}_320x240.jpg`;
+                const imgUrl = image.url;
+                const thumbUrl = `${image.urlbase}_320x240.jpg`;
                 
                 const thumb = document.createElement('img');
                 thumb.src = thumbUrl;
