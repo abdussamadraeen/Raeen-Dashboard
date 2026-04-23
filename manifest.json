@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
-  "name": "Abdus Dashboard",
-  "version": "1.1",
-  "description": "A minimalist, premium new tab dashboard.",
+  "name": "Abdus Dashboard Lite",
+  "version": "1.2",
+  "description": "A lightweight, premium new tab dashboard optimized for speed.",
   "chrome_url_overrides": {
     "newtab": "index.html"
   },
@@ -12,32 +12,9 @@
   "host_permissions": [
     "https://suggestqueries.google.com/*",
     "https://*.bing.com/*",
-    "https://bing.biturl.top/*",
-    "https://peapix.com/*",
-    "https://api.allorigins.win/*"
-  ],
-  "content_scripts": [
-    {
-      "matches": [
-        "https://chatgpt.com/*",
-        "https://gemini.google.com/*",
-        "https://copilot.microsoft.com/*",
-        "https://www.perplexity.ai/*",
-        "https://claude.ai/*",
-        "https://blackbox.ai/*",
-        "https://huggingface.co/*",
-        "https://chat.groq.com/*",
-        "https://mistral.ai/*",
-        "https://cohere.ai/*",
-        "https://cohere.com/*",
-        "https://www.together.ai/*",
-        "https://replicate.com/*"
-      ],
-      "js": ["ai-inject.js"],
-      "run_at": "document_idle"
-    }
+    "https://bing.biturl.top/*"
   ],
   "content_security_policy": {
-    "extension_pages": "script-src 'self'; object-src 'self'; frame-src 'self' https://www.youtube.com;"
+    "extension_pages": "script-src 'self'; object-src 'self';"
   }
 }

@@ -15,18 +15,8 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
 </head>
 <body data-theme="dark">
-    <!-- 5026 AD Noosphere Layer -->
-    <div class="noosphere-status" id="cdi-bar">
-        <div class="cdi-label">CIVILIZATION DEVELOPMENT INDEX: TYPE II TRANSITION</div>
-        <div class="cdi-progress-container">
-            <div class="cdi-progress" style="width: 73.4%;"></div>
-        </div>
-        <div class="cdi-value">CDI: 2.14 // SUPERTREND: ASCENDING</div>
-    </div>
-
     <!-- Background Elements -->
     <div id="background-layer" class="background-layer"></div>
-    <canvas id="canvas-layer" class="background-layer hidden"></canvas>
     <div class="overlay"></div>
     
     <!-- Clock positioned at top-left like Brave -->
@@ -45,7 +35,6 @@
             <div class="apps-tabs">
                 <button class="app-tab active" data-target="google-apps">Google</button>
                 <button class="app-tab" data-target="ms-apps">Microsoft</button>
-                <button class="app-tab" data-target="ai-apps">AI Models</button>
                 <button class="app-tab" data-target="custom-apps">Custom</button>
             </div>
             
@@ -57,9 +46,6 @@
                 <!-- Rendered dynamically -->
             </div>
             
-            <div id="ai-apps" class="apps-grid app-pane">
-                <!-- Rendered dynamically -->
-            </div>
 
             <div id="custom-apps" class="apps-grid app-pane">
                 <!-- Rendered dynamically -->
@@ -212,59 +198,14 @@
                         <div class="settings-group mt-0">
                             <label>Background Type</label>
                             <select id="bg-type-select" class="custom-select">
-                                <option value="canvas">Live Canvas (Interactive Effects)</option>
                                 <option value="bing">Bing Daily Wallpaper</option>
-                                <option value="preset">Theme Library</option>
                                 <option value="solid">Solid Colors & Gradients</option>
-                                <option value="local">Local File (Image/Video)</option>
-                                <option value="custom">Custom Media URL</option>
-                            </select>
-                        </div>
-                        
-                        <div id="bg-canvas-options" class="settings-group hidden">
-                            <label>Canvas Effect Style</label>
-                            <select id="canvas-style-select" class="custom-select">
-                                <option value="neural">Neural Network</option>
-                                <option value="bubbles">Water Bubbles</option>
-                                <option value="rain">Glass Rain</option>
                             </select>
                         </div>
                         
                         <div id="bg-bing-options" class="settings-group hidden">
                             <label>Bing Daily Wallpaper</label>
-                            <p class="subtext">Automatically fetches the beautiful Bing Image of the Day. Click an image to apply it.</p>
-                            <div id="bing-gallery-container" style="margin-top: 12px;">
-                                <div id="bing-gallery" style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px;">
-                                    <!-- Dynamically populated -->
-                                </div>
-                            </div>
-                        </div>
-
-                        <div id="bg-preset-options" class="settings-group hidden">
-                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
-                                <label style="margin-bottom: 0;">Theme Library</label>
-                                <select id="gallery-category-select" class="custom-select" style="width: auto; min-width: 150px; padding: 6px 12px; font-size: 0.85rem;">
-                                    <option value="all">All Themes</option>
-                                    <optgroup label="Bing Inspired">
-                                        <option value="abstract">Abstract</option>
-                                        <option value="nature">Nature & Travel</option>
-                                        <option value="ocean">Ocean</option>
-                                        <option value="space">Space</option>
-                                        <option value="animals">Animals</option>
-                                    </optgroup>
-                                    <optgroup label="Chrome Customization">
-                                        <option value="chrome_earth">Earth & Sea</option>
-                                        <option value="chrome_cityscapes">Cityscapes</option>
-                                        <option value="chrome_textures">Textures</option>
-                                        <option value="chrome_geometric">Geometric Shapes</option>
-                                        <option value="chrome_aapi">Asian & Pacific Islander Artists</option>
-                                        <option value="chrome_lgbtq">LGBTQ+ Artists</option>
-                                    </optgroup>
-                                </select>
-                            </div>
-                            <div class="grid-options" id="gallery-grid">
-                                <!-- Rendered via JS -->
-                            </div>
+                            <p class="subtext">Automatically fetches the beautiful Bing Image of the Day.</p>
                         </div>
 
                         <div id="bg-solid-options" class="settings-group hidden">
@@ -273,29 +214,14 @@
                                 <div class="color-swatch" style="background: #1a1a2e" data-color="#1a1a2e"></div>
                                 <div class="color-swatch" style="background: #2d3748" data-color="#2d3748"></div>
                                 <div class="color-swatch" style="background: #1e3a8a" data-color="#1e3a8a"></div>
-                                <div class="color-swatch" style="background: #064e3b" data-color="#064e3b"></div>
-                                <div class="color-swatch" style="background: #4a044e" data-color="#4a044e"></div>
                                 <div class="color-swatch" style="background: #000000" data-color="#000000"></div>
                                 <div class="color-swatch" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%)" data-color="linear-gradient(135deg, #667eea 0%, #764ba2 100%)"></div>
-                                <div class="color-swatch" style="background: linear-gradient(135deg, #ff9a9e 0%, #fecfef 99%, #fecfef 100%)" data-color="linear-gradient(135deg, #ff9a9e 0%, #fecfef 99%, #fecfef 100%)"></div>
-                                <div class="color-swatch" style="background: #f8fafc" data-color="#f8fafc"></div>
                             </div>
                             <label>Custom Color</label>
                             <div style="display: flex; gap: 10px; align-items: center;">
                                 <input type="color" id="bg-color-picker" value="#1a1a2e" style="height: 40px; cursor: pointer;">
                                 <span class="subtext">Pick a custom solid color</span>
                             </div>
-                        </div>
-
-                        <div id="bg-local-options" class="settings-group hidden">
-                            <label>Upload Local Media</label>
-                            <input type="file" id="bg-local-file" class="text-input" accept="image/*,video/*">
-                            <p class="subtext mt-2">Select an image or video (.mp4, .webm) from your computer.</p>
-                        </div>
-
-                        <div id="bg-custom-options" class="settings-group hidden">
-                            <label>Media URL (Image or Video)</label>
-                            <input type="text" id="bg-custom-url" class="text-input" placeholder="https://example.com/video.mp4">
                         </div>
                     </div>
 
@@ -319,15 +245,6 @@
                                     <input type="radio" name="theme_preference" value="light">
                                     <span class="custom-radio"></span>
                                     Light Mode
-                                </label>
-                            </div>
-                        </div>
-                        <div class="card-container mt-4">
-                            <div class="settings-row" style="border-bottom: none;">
-                                <span>Noosphere CDI Bar</span>
-                                <label class="switch">
-                                    <input type="checkbox" id="show-noosphere-toggle" checked>
-                                    <span class="slider round"></span>
                                 </label>
                             </div>
                         </div>
