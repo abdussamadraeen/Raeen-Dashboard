@@ -35,11 +35,52 @@
         document.head.appendChild(style);
     }
 
+    // --- IndexedDB for Local Media ---
+    let db;
+    const initDB = () => {
+        return new Promise((resolve, reject) => {
+            const request = indexedDB.open('AbdusDashboardDB', 1);
+            request.onerror = (event) => reject('Database error: ' + event.target.errorCode);
+            request.onsuccess = (event) => { db = event.target.result; resolve(db); };
+            request.onupgradeneeded = (event) => {
+                const db = event.target.result;
+                if (!db.objectStoreNames.contains('media')) db.createObjectStore('media', { keyPath: 'id' });
+            };
+        });
+    };
+
+    const saveMedia = async (file) => {
+        if (!db) await initDB();
+        return new Promise((resolve, reject) => {
+            const transaction = db.transaction(['media'], 'readwrite');
+            const store = transaction.objectStore('media');
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                const request = store.put({ id: 'local_bg', data: e.target.result, type: file.type, name: file.name });
+                request.onsuccess = () => resolve(e.target.result);
+                request.onerror = () => reject('Save error');
+            };
+            reader.readAsDataURL(file);
+        });
+    };
+
+    const getMedia = async () => {
+        if (!db) await initDB();
+        return new Promise((resolve) => {
+            const transaction = db.transaction(['media'], 'readonly');
+            const store = transaction.objectStore('media');
+            const request = store.get('local_bg');
+            request.onsuccess = () => resolve(request.result);
+            request.onerror = () => resolve(null);
+        });
+    };
+
     // --- State Management ---
     const defaultSettings = {
         themePreference: 'system',
-        backgroundType: 'bing',
-        backgroundValue: 'bing_latest',
+        backgroundType: 'canvas',
+        backgroundValue: 'neural',
+        canvasStyle: 'neural',
         showSearch: true,
         searchEngine: 'google',
         showTopSites: true,
@@ -58,6 +99,12 @@
         msApps: [
             { name: 'Copilot', url: 'https://copilot.microsoft.com/', icon: 'https://upload.wikimedia.org/wikipedia/commons/2/2a/Microsoft_365_Copilot_Icon.svg' },
             { name: 'Outlook', url: 'https://outlook.live.com/', icon: 'https://upload.wikimedia.org/wikipedia/commons/d/df/Microsoft_Office_Outlook_%282018%E2%80%93present%29.svg' }
+        ],
+        aiApps: [
+            { name: 'ChatGPT', url: 'https://chatgpt.com/', icon: 'https://chatgpt.com/favicon.ico' },
+            { name: 'Gemini', url: 'https://gemini.google.com/', icon: 'https://gemini.google.com/favicon.ico' },
+            { name: 'Claude', url: 'https://claude.ai/', icon: 'https://claude.ai/favicon.ico' },
+            { name: 'Perplexity', url: 'https://www.perplexity.ai/', icon: 'https://www.perplexity.ai/favicon.ico' }
         ],
         customApps: [],
         showClock: true,
@@ -81,6 +128,77 @@
         if (!noApply) applySettings();
     }
 
+    // --- Canvas Engine ---
+    const CanvasEngine = (() => {
+        let canvas, ctx, animationId, particles = [], width, height, theme = 'neural';
+        let mouse = { x: null, y: null };
+
+        const init = (el, style) => {
+            canvas = el; ctx = canvas.getContext('2d');
+            theme = style || 'neural';
+            resize();
+            window.addEventListener('resize', resize);
+            window.addEventListener('mousemove', (e) => { mouse.x = e.x; mouse.y = e.y; });
+            animate();
+        };
+
+        const resize = () => {
+            width = canvas.width = window.innerWidth;
+            height = canvas.height = window.innerHeight;
+            createParticles();
+        };
+
+        const createParticles = () => {
+            particles = [];
+            const count = theme === 'rain' ? 100 : 80;
+            for (let i = 0; i < count; i++) {
+                particles.push({
+                    x: Math.random() * width,
+                    y: Math.random() * height,
+                    vx: (Math.random() - 0.5) * (theme === 'neural' ? 1 : 0.5),
+                    vy: theme === 'rain' ? Math.random() * 15 + 5 : (Math.random() - 0.5) * 1,
+                    radius: theme === 'bubbles' ? Math.random() * 20 + 5 : Math.random() * 2 + 1,
+                    opacity: Math.random() * 0.5 + 0.2
+                });
+            }
+        };
+
+        const animate = () => {
+            ctx.clearRect(0, 0, width, height);
+            const accent = getComputedStyle(document.documentElement).getPropertyValue('--accent').trim() || '#7b61ff';
+            
+            particles.forEach((p, i) => {
+                if (theme === 'neural') {
+                    p.x += p.vx; p.y += p.vy;
+                    if (p.x < 0 || p.x > width) p.vx *= -1;
+                    if (p.y < 0 || p.y > height) p.vy *= -1;
+                    ctx.beginPath(); ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
+                    ctx.fillStyle = `rgba(123, 97, 255, ${p.opacity})`; ctx.fill();
+                    for (let j = i + 1; j < particles.length; j++) {
+                        const p2 = particles[j];
+                        const dx = p.x - p2.x, dy = p.y - p2.y, dist = Math.sqrt(dx * dx + dy * dy);
+                        if (dist < 150) {
+                            ctx.beginPath(); ctx.strokeStyle = `rgba(123, 97, 255, ${(150 - dist) / 1000})`;
+                            ctx.lineWidth = 1; ctx.moveTo(p.x, p.y); ctx.lineTo(p2.x, p2.y); ctx.stroke();
+                        }
+                    }
+                } else if (theme === 'bubbles') {
+                    p.y -= p.vy; if (p.y < -50) p.y = height + 50;
+                    ctx.beginPath(); ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
+                    ctx.strokeStyle = `rgba(255, 255, 255, ${p.opacity * 0.3})`; ctx.lineWidth = 2; ctx.stroke();
+                } else if (theme === 'rain') {
+                    p.y += p.vy; if (p.y > height) { p.y = -20; p.x = Math.random() * width; }
+                    ctx.beginPath(); ctx.strokeStyle = `rgba(255, 255, 255, ${p.opacity * 0.2})`;
+                    ctx.lineWidth = 1; ctx.moveTo(p.x, p.y); ctx.lineTo(p.x, p.y + 15); ctx.stroke();
+                }
+            });
+            animationId = requestAnimationFrame(animate);
+        };
+
+        const stop = () => { cancelAnimationFrame(animationId); window.removeEventListener('resize', resize); };
+        return { init, stop };
+    })();
+
     // --- Search Engines ---
     const engines = {
         'google': { action: 'https://www.google.com/search', param: 'q' },
@@ -97,6 +215,7 @@
     // --- DOM Elements Cache ---
     const dom = {
         bgLayer: document.getElementById('background-layer'),
+        canvasLayer: document.getElementById('canvas-layer'),
         clockWidget: document.getElementById('clock-widget'),
         timeEl: document.getElementById('time'),
         searchWidget: document.getElementById('search-widget'),
@@ -116,10 +235,20 @@
         themeRadios: document.getElementsByName('theme_preference'),
         bgTypeSelect: document.getElementById('bg-type-select'),
         showMainUIToggle: document.getElementById('show-main-ui-toggle'),
+        bgCanvasOptions: document.getElementById('bg-canvas-options'),
+        canvasStyleSelect: document.getElementById('canvas-style-select'),
         bgBingOptions: document.getElementById('bg-bing-options'),
+        bingGallery: document.getElementById('bing-gallery'),
+        bgPresetOptions: document.getElementById('bg-preset-options'),
+        galleryGrid: document.getElementById('gallery-grid'),
+        galleryCategorySelect: document.getElementById('gallery-category-select'),
         bgSolidOptions: document.getElementById('bg-solid-options'),
         bgColorPicker: document.getElementById('bg-color-picker'),
         colorSwatches: document.querySelectorAll('.color-swatch'),
+        bgLocalOptions: document.getElementById('bg-local-options'),
+        bgLocalFile: document.getElementById('bg-local-file'),
+        bgCustomOptions: document.getElementById('bg-custom-options'),
+        bgCustomUrl: document.getElementById('bg-custom-url'),
         toggleSearch: document.getElementById('toggle-search'),
         engineRadios: document.getElementsByName('search_engine'),
         toggleTopSites: document.getElementById('toggle-topsites'),
@@ -155,6 +284,7 @@
         appPanes: document.querySelectorAll('.app-pane'),
         googleAppsGrid: document.getElementById('google-apps'),
         msAppsGrid: document.getElementById('ms-apps'),
+        aiAppsGrid: document.getElementById('ai-apps'),
         customAppsGrid: document.getElementById('custom-apps'),
         addAppBtn: document.getElementById('add-app-btn'),
         addAppModal: document.getElementById('add-app-modal'),
@@ -166,54 +296,52 @@
         customSearchUrlInput: document.getElementById('custom-search-url')
     };
 
-    // --- Render Top Sites ---
-    function renderTopSites() {
-        if(!dom.topSitesWidget || !dom.shortcutsList) return;
-        dom.shortcutsList.innerHTML = '';
-        settings.shortcuts.forEach((sc, index) => {
-            const div = document.createElement('div');
-            div.className = 'managed-item';
-            div.innerHTML = `<div><strong>${sc.name}</strong><span>${sc.url}</span></div><div class="managed-item-actions"><button data-index="${index}">Remove</button></div>`;
-            dom.shortcutsList.appendChild(div);
-        });
-
-        dom.topSitesWidget.innerHTML = '';
-        const getDomain = (urlStr) => { try { return new URL(urlStr).hostname; } catch(e) { return urlStr; } };
-        const renderShortcut = (sc, index = 0) => {
-            const a = document.createElement('a');
-            a.href = sc.url; a.className = 'shortcut'; a.style.setProperty('--item-index', index);
-            const img = document.createElement('img');
-            const primaryUrl = sc.icon || `https://icon.horse/icon/${getDomain(sc.url)}`;
-            const fallbackUrl = `https://www.google.com/s2/favicons?domain_url=${encodeURIComponent(sc.url)}&sz=128`;
-            img.src = primaryUrl; img.alt = sc.name;
-            img.onerror = () => { if (img.src === primaryUrl) img.src = fallbackUrl; else { img.style.display='none'; a.prepend(createIconPlaceholder(sc.name)); } };
-            a.appendChild(img);
-            const span = document.createElement('span'); span.textContent = sc.name; a.appendChild(span);
-            dom.topSitesWidget.appendChild(a);
-        };
-
-        if (settings.topSitesSource === 'favorites') {
-            settings.shortcuts.forEach((sc, index) => renderShortcut(sc, index));
-        } else if (typeof chrome !== 'undefined' && chrome.topSites) {
-            chrome.topSites.get((topSites) => {
-                const existingUrls = new Set(settings.shortcuts.map(s => s.url.replace(/\/$/, '')));
-                topSites.slice(0, 24).forEach((site, i) => {
-                    if (!existingUrls.has(site.url.replace(/\/$/, ''))) {
-                        renderShortcut({ name: site.title || site.url, url: site.url, icon: '' }, i);
-                    }
-                });
-            });
+    // --- Bing Logic (WOW Improvisation) ---
+    async function loadBingGallery() {
+        if (!dom.bingGallery) return;
+        dom.bingGallery.innerHTML = '<p class="subtext">Loading daily wallpapers...</p>';
+        try {
+            const mkt = navigator.language || 'en-US';
+            const res = await fetch(`https://www.bing.com/HPImageArchive.aspx?format=js&idx=0&n=8&mkt=${mkt}`);
+            const data = await res.json();
+            const images = data.images || [];
+            dom.bingGallery.innerHTML = images.map(img => `
+                <div class="bing-thumb-wrapper" style="cursor:pointer;" data-url="https://www.bing.com${img.url}">
+                    <img src="https://www.bing.com${img.urlbase}_400x240.jpg" class="bing-thumb ${settings.backgroundValue === 'https://www.bing.com'+img.url ? 'active' : ''}" style="width:100%; border-radius:8px;">
+                </div>
+            `).join('');
+            dom.bingGallery.querySelectorAll('.bing-thumb-wrapper').forEach(w => w.addEventListener('click', () => {
+                settings.backgroundType = 'bing'; settings.backgroundValue = w.dataset.url;
+                saveSettings();
+            }));
+        } catch (e) {
+            dom.bingGallery.innerHTML = '<p class="subtext">Failed to fetch Bing gallery. Check your connection.</p>';
         }
     }
 
-    function createIconPlaceholder(name) {
-        const div = document.createElement('div');
-        div.className = 'icon-placeholder';
-        div.textContent = name.charAt(0).toUpperCase();
-        return div;
+    // --- Theme Library (Restored) ---
+    const themes = {
+        nature: [
+            { name: 'Rainy Forest', url: 'https://images.unsplash.com/photo-1441974231531-c6227db76b6e?auto=format&fit=crop&w=1920&q=80' },
+            { name: 'Mountain Peak', url: 'https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?auto=format&fit=crop&w=1920&q=80' }
+        ],
+        space: [
+            { name: 'Galaxy', url: 'https://images.unsplash.com/photo-1464802686167-b939a6910659?auto=format&fit=crop&w=1920&q=80' }
+        ]
+    };
+
+    function renderThemeLibrary() {
+        if (!dom.galleryGrid) return;
+        const cat = dom.galleryCategorySelect.value;
+        let list = cat === 'all' ? Object.values(themes).flat() : (themes[cat] || []);
+        dom.galleryGrid.innerHTML = list.map(t => `<div class="bg-option" style="background-image:url('${t.url}')" data-url="${t.url}"></div>`).join('');
+        dom.galleryGrid.querySelectorAll('.bg-option').forEach(opt => opt.addEventListener('click', () => {
+            settings.backgroundType = 'preset'; settings.backgroundValue = opt.dataset.url;
+            saveSettings();
+        }));
     }
 
-    // --- Core Logic ---
+    // --- Core Application Logic ---
     function applyTheme() {
         const root = document.documentElement;
         if (settings.themePreference === 'light') root.setAttribute('data-theme', 'light');
@@ -221,74 +349,68 @@
         else root.toggleAttribute('data-theme', window.matchMedia('(prefers-color-scheme: light)').matches);
     }
 
-    function applySettings() {
+    async function applySettings() {
         applyTheme();
         const t = settings.backgroundType;
-        if (dom.bgLayer) {
-            dom.bgLayer.innerHTML = '';
-            const applyBg = (url) => { dom.bgLayer.style.backgroundImage = `url('${url}')`; dom.bgLayer.style.backgroundRepeat = 'no-repeat'; dom.bgLayer.style.backgroundPosition = 'center'; dom.bgLayer.style.backgroundSize = 'cover'; };
-            if (t === 'bing') {
-                const lang = navigator.language || 'en-US';
-                const todayStr = new Date().toISOString().split('T')[0];
-                applyBg(`https://bing.biturl.top/?resolution=1920&format=image&index=0&mkt=${lang}&cb=${todayStr}`);
-            } else if (t === 'solid') {
-                dom.bgLayer.style.background = settings.backgroundValue;
+        
+        // Background Cleanup
+        CanvasEngine.stop();
+        if (dom.canvasLayer) dom.canvasLayer.classList.add('hidden');
+        if (dom.bgLayer) { dom.bgLayer.innerHTML = ''; dom.bgLayer.style.background = ''; }
+
+        if (t === 'canvas') {
+            if (dom.canvasLayer) {
+                dom.canvasLayer.classList.remove('hidden');
+                CanvasEngine.init(dom.canvasLayer, settings.canvasStyle || 'neural');
+            }
+        } else if (t === 'bing' || t === 'preset' || t === 'custom') {
+            const url = t === 'bing' && settings.backgroundValue === 'bing_latest' ? `https://www.bing.com/HPImageArchive.aspx?format=js&idx=0&n=1` : settings.backgroundValue;
+            if (url.includes('.mp4') || url.includes('.webm')) {
+                dom.bgLayer.innerHTML = `<video autoplay muted loop playsinline style="width:100%;height:100%;object-fit:cover;"><source src="${url}"></video>`;
+            } else {
+                dom.bgLayer.style.backgroundImage = `url('${url}')`;
+                dom.bgLayer.style.backgroundSize = 'cover';
+                dom.bgLayer.style.backgroundPosition = 'center';
+            }
+        } else if (t === 'solid') {
+            dom.bgLayer.style.background = settings.backgroundValue;
+        } else if (t === 'local') {
+            const media = await getMedia();
+            if (media) {
+                if (media.type.startsWith('video')) dom.bgLayer.innerHTML = `<video autoplay muted loop playsinline style="width:100%;height:100%;object-fit:cover;"><source src="${media.data}"></video>`;
+                else { dom.bgLayer.style.backgroundImage = `url('${media.data}')`; dom.bgLayer.style.backgroundSize = 'cover'; }
             }
         }
 
+        // UI Toggles
         if(dom.searchWidget) dom.searchWidget.classList.toggle('hidden', !settings.showSearch);
         if(dom.topSitesWidget) dom.topSitesWidget.classList.toggle('hidden', !settings.showTopSites);
         if(dom.clockWidget) dom.clockWidget.style.display = settings.showClock ? 'block' : 'none';
         if(dom.cardsWidget) dom.cardsWidget.classList.toggle('hidden', !settings.showCards);
-        if(dom.cardDateEl) dom.cardDateEl.style.display = settings.showCardDate !== false ? 'flex' : 'none';
-        if(dom.cardFocusEl) dom.cardFocusEl.style.display = settings.showCardFocus !== false ? 'flex' : 'none';
-        if(dom.cardNoteEl) dom.cardNoteEl.style.display = settings.showCardNote !== false ? 'flex' : 'none';
-
-        renderTopSites();
+        
         syncModalUI();
-        updateTime();
+        renderTopSites();
+        renderApps();
     }
 
     function syncModalUI() {
-        if (dom.themeRadios) Array.from(dom.themeRadios).forEach(r => r.checked = (r.value === settings.themePreference));
-        if (dom.engineRadios) Array.from(dom.engineRadios).forEach(r => r.checked = (r.value === settings.searchEngine));
-        if (dom.topsitesSourceRadios) Array.from(dom.topsitesSourceRadios).forEach(r => r.checked = (r.value === settings.topSitesSource));
-
         if (dom.bgTypeSelect) {
             dom.bgTypeSelect.value = settings.backgroundType;
             const t = settings.backgroundType;
+            if(dom.bgCanvasOptions) dom.bgCanvasOptions.classList.toggle('hidden', t !== 'canvas');
             if(dom.bgBingOptions) dom.bgBingOptions.classList.toggle('hidden', t !== 'bing');
+            if(dom.bgPresetOptions) dom.bgPresetOptions.classList.toggle('hidden', t !== 'preset');
             if(dom.bgSolidOptions) dom.bgSolidOptions.classList.toggle('hidden', t !== 'solid');
-            if(dom.bgColorPicker) dom.bgColorPicker.value = settings.backgroundValue.startsWith('#') ? settings.backgroundValue.substring(0,7) : '#1a1a2e';
-            if(dom.colorSwatches) dom.colorSwatches.forEach(s => s.classList.toggle('selected', t === 'solid' && s.dataset.color === settings.backgroundValue));
+            if(dom.bgLocalOptions) dom.bgLocalOptions.classList.toggle('hidden', t !== 'local');
+            if(dom.bgCustomOptions) dom.bgCustomOptions.classList.toggle('hidden', t !== 'custom');
         }
-
-        if (dom.toggleSearch) dom.toggleSearch.checked = settings.showSearch;
-        if (dom.toggleTopSites) dom.toggleTopSites.checked = settings.showTopSites;
-        if (dom.toggleClock) dom.toggleClock.checked = settings.showClock;
-        if (dom.clockFormatSelect) dom.clockFormatSelect.value = settings.clockFormat || 'auto';
-        if (dom.toggleCards) dom.toggleCards.checked = settings.showCards;
-        if (dom.toggleCardDate) dom.toggleCardDate.checked = settings.showCardDate !== false;
-        if (dom.toggleCardFocus) dom.toggleCardFocus.checked = settings.showCardFocus !== false;
-        if (dom.toggleCardNote) dom.toggleCardNote.checked = settings.showCardNote !== false;
-
         if (dom.showMainUIToggle) dom.showMainUIToggle.checked = settings.showMainUI;
         [dom.searchWidget, dom.topSitesWidget, dom.cardsWidget, dom.clockWidget].forEach(el => { if (el) el.classList.toggle('immersive-hidden', !settings.showMainUI); });
         document.body.classList.toggle('immersive-mode', !settings.showMainUI);
-        if (dom.customSearchUrlInput) dom.customSearchUrlInput.value = settings.customSearchUrl || '';
     }
 
-    // --- Search Logic ---
-    if (dom.searchForm && dom.searchInput) {
-        dom.searchForm.addEventListener('submit', (e) => {
-            e.preventDefault();
-            const query = dom.searchInput.value.trim();
-            if (!query) return;
-            const engine = engines[settings.searchEngine] || engines['google'];
-            const url = settings.searchEngine === 'custom_engine' ? (settings.customSearchUrl || '').replace('%s', encodeURIComponent(query)) : `${engine.action}${engine.action.includes('?') ? '&' : '?'}${engine.param || 'q'}=${encodeURIComponent(query)}`;
-            window.location.href = url;
-        });
-
+    // --- Search suggestions and Logic ---
+    if (dom.searchInput) {
         let suggestTimeout;
         dom.searchInput.addEventListener('input', (e) => {
             const query = e.target.value.trim();
@@ -306,153 +428,61 @@
                 } catch(err) {}
             }, 150);
         });
-
-        document.addEventListener('click', (e) => { if (dom.searchSuggestions && !dom.searchForm.contains(e.target)) dom.searchSuggestions.classList.add('hidden'); });
-        dom.searchInput.addEventListener('focus', () => { if (dom.searchSuggestions && dom.searchSuggestions.innerHTML.trim() !== '') dom.searchSuggestions.classList.remove('hidden'); });
-        if (dom.searchSuggestions) {
-            dom.searchSuggestions.addEventListener('click', (e) => {
-                const item = e.target.closest('.suggestion-item');
-                if (item) { dom.searchInput.value = item.dataset.text; dom.searchSuggestions.classList.add('hidden'); dom.searchForm.dispatchEvent(new Event('submit')); }
-            });
-        }
     }
 
-    // --- Settings Modal ---
-    if (dom.settingsBtn && dom.modalOverlay) {
-        dom.settingsBtn.addEventListener('click', () => dom.modalOverlay.classList.remove('hidden'));
-        if(dom.closeBtn) dom.closeBtn.addEventListener('click', () => dom.modalOverlay.classList.add('hidden'));
-    }
-    if (dom.modalOverlay) dom.modalOverlay.addEventListener('click', (e) => { if (e.target === dom.modalOverlay) dom.modalOverlay.classList.add('hidden'); });
-    if (dom.sidebarTabs) {
-        dom.sidebarTabs.forEach(tab => {
-            tab.addEventListener('click', () => {
-                dom.sidebarTabs.forEach(t => t.classList.remove('active')); dom.tabPanes.forEach(p => p.classList.remove('active'));
-                tab.classList.add('active'); const target = document.getElementById(tab.dataset.target); if(target) target.classList.add('active');
-            });
+    // --- Top Sites Render ---
+    function renderTopSites() {
+        if(!dom.topSitesWidget) return;
+        dom.topSitesWidget.innerHTML = '';
+        settings.shortcuts.forEach((sc, i) => {
+            const a = document.createElement('a'); a.href = sc.url; a.className = 'shortcut'; a.style.setProperty('--item-index', i);
+            a.innerHTML = `<img src="${sc.icon || 'https://www.google.com/s2/favicons?domain='+sc.url+'&sz=128'}"><span>${sc.name}</span>`;
+            dom.topSitesWidget.appendChild(a);
         });
     }
 
-    // Bindings
-    if (dom.themeRadios) Array.from(dom.themeRadios).forEach(r => r.addEventListener('change', (e) => { if(e.target.checked) { settings.themePreference = e.target.value; saveSettings(); } }));
-    if (dom.engineRadios) Array.from(dom.engineRadios).forEach(r => r.addEventListener('change', (e) => { if(e.target.checked) { settings.searchEngine = e.target.value; saveSettings(); } }));
-    if (dom.topsitesSourceRadios) Array.from(dom.topsitesSourceRadios).forEach(r => r.addEventListener('change', (e) => { if(e.target.checked) { settings.topSitesSource = e.target.value; saveSettings(); } }));
-    if (dom.bgTypeSelect) dom.bgTypeSelect.addEventListener('change', (e) => { settings.backgroundType = e.target.value; saveSettings(); });
-    if (dom.colorSwatches) dom.colorSwatches.forEach(s => s.addEventListener('click', () => { settings.backgroundType = 'solid'; settings.backgroundValue = s.dataset.color; saveSettings(); }));
-    if (dom.bgColorPicker) dom.bgColorPicker.addEventListener('input', (e) => { settings.backgroundType = 'solid'; settings.backgroundValue = e.target.value; saveSettings(); });
-    if (dom.toggleSearch) dom.toggleSearch.addEventListener('change', (e) => { settings.showSearch = e.target.checked; saveSettings(); });
-    if (dom.toggleTopSites) dom.toggleTopSites.addEventListener('change', (e) => { settings.showTopSites = e.target.checked; saveSettings(); });
-    if (dom.toggleClock) dom.toggleClock.addEventListener('change', (e) => { settings.showClock = e.target.checked; saveSettings(); });
+    // --- Apps Render ---
+    function renderApps() {
+        const render = (apps, grid) => {
+            if(!grid) return;
+            grid.innerHTML = apps.map((app, i) => `<a href="${app.url}" class="app-item"><img src="${app.icon}"><span>${app.name}</span></a>`).join('');
+        };
+        render(settings.googleApps, dom.googleAppsGrid);
+        render(settings.msApps, dom.msAppsGrid);
+        render(settings.aiApps, dom.aiAppsGrid);
+        render(settings.customApps, dom.customAppsGrid);
+    }
+
+    // --- Event Listeners ---
+    if (dom.bgTypeSelect) dom.bgTypeSelect.addEventListener('change', (e) => { settings.backgroundType = e.target.value; saveSettings(); if(e.target.value === 'bing') loadBingGallery(); if(e.target.value === 'preset') renderThemeLibrary(); });
+    if (dom.canvasStyleSelect) dom.canvasStyleSelect.addEventListener('change', (e) => { settings.canvasStyle = e.target.value; saveSettings(); });
+    if (dom.bgLocalFile) dom.bgLocalFile.addEventListener('change', async (e) => { if (e.target.files[0]) { await saveMedia(e.target.files[0]); settings.backgroundType = 'local'; saveSettings(); } });
+    if (dom.bgCustomUrl) dom.bgCustomUrl.addEventListener('change', (e) => { settings.backgroundType = 'custom'; settings.backgroundValue = e.target.value; saveSettings(); });
     if (dom.showMainUIToggle) dom.showMainUIToggle.addEventListener('change', (e) => { settings.showMainUI = e.target.checked; saveSettings(); });
-    if (dom.clockFormatSelect) dom.clockFormatSelect.addEventListener('change', (e) => { settings.clockFormat = e.target.value; saveSettings(); });
-    if (dom.toggleCards) dom.toggleCards.addEventListener('change', (e) => { settings.showCards = e.target.checked; saveSettings(); });
-    if (dom.toggleCardDate) dom.toggleCardDate.addEventListener('change', (e) => { settings.showCardDate = e.target.checked; saveSettings(); });
-    if (dom.toggleCardFocus) dom.toggleCardFocus.addEventListener('change', (e) => { settings.showCardFocus = e.target.checked; saveSettings(); });
-    if (dom.toggleCardNote) dom.toggleCardNote.addEventListener('change', (e) => { settings.showCardNote = e.target.checked; saveSettings(); });
-    if (dom.customSearchUrlInput) dom.customSearchUrlInput.addEventListener('change', (e) => { settings.customSearchUrl = e.target.value; saveSettings(); });
-
-    if (dom.addShortcutBtn) {
-        dom.addShortcutBtn.addEventListener('click', () => {
-            const name = dom.newShortcutName.value.trim(), url = dom.newShortcutUrl.value.trim();
-            if (name && url) {
-                const cleanUrl = url.match(/^https?:\/\//i) ? url : 'http://' + url;
-                settings.shortcuts.push({ name, url: cleanUrl, icon: '' });
-                dom.newShortcutName.value = ''; dom.newShortcutUrl.value = ''; saveSettings();
-            }
-        });
-    }
-    if (dom.shortcutsList) dom.shortcutsList.addEventListener('click', (e) => { if (e.target.tagName === 'BUTTON') { settings.shortcuts.splice(parseInt(e.target.dataset.index, 10), 1); saveSettings(); } });
 
     // --- Time ---
     function updateTime() {
-        if (!dom.timeEl || !settings.showClock) return;
+        if (!dom.timeEl) return;
         const now = new Date();
-        let h = now.getHours(), m = now.getMinutes();
-        if (settings.clockFormat !== '24h') { h = h % 12 || 12; } else { h = h < 10 ? '0' + h : h; }
-        dom.timeEl.textContent = `${h}:${m < 10 ? '0' + m : m}`;
+        dom.timeEl.textContent = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: settings.clockFormat !== '24h' });
     }
-
-    // --- Date Card ---
-    function updateDateCard() {
-        if (!dom.cardDateValue) return;
-        const now = new Date();
-        dom.cardDateValue.textContent = `${['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][now.getMonth()]} ${now.getDate()}`;
-        if (dom.cardDateDay) dom.cardDateDay.textContent = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'][now.getDay()];
-    }
-
-    // --- Focus Timer ---
-    const FOCUS_KEY = 'abdus_focus_timer';
-    function getFocusState() { try { return JSON.parse(localStorage.getItem(FOCUS_KEY)); } catch(e) { return null; } }
-    function renderFocusUI() {
-        if (!dom.cardFocusTime || !dom.focusToggleBtn) return;
-        const state = getFocusState();
-        if (!state) { dom.cardFocusTime.textContent = '25:00'; dom.focusToggleBtn.textContent = '▶ Start'; return; }
-        const sec = state.running ? Math.max(0, Math.round((state.endTime - Date.now()) / 1000)) : state.remaining;
-        const m = Math.floor(sec / 60), s = sec % 60;
-        dom.cardFocusTime.textContent = `${m < 10 ? '0' : ''}${m}:${s < 10 ? '0' : ''}${s}`;
-        dom.focusToggleBtn.textContent = state.running ? '⏸ Pause' : '▶ Resume';
-        if (sec <= 0 && state.running) localStorage.removeItem(FOCUS_KEY);
-    }
-    if (dom.focusToggleBtn) dom.focusToggleBtn.addEventListener('click', () => {
-        const state = getFocusState();
-        if (!state) localStorage.setItem(FOCUS_KEY, JSON.stringify({ running: true, endTime: Date.now() + 1500000 }));
-        else if (state.running) localStorage.setItem(FOCUS_KEY, JSON.stringify({ running: false, remaining: Math.round((state.endTime - Date.now()) / 1000) }));
-        else localStorage.setItem(FOCUS_KEY, JSON.stringify({ running: true, endTime: Date.now() + state.remaining * 1000 }));
-        renderFocusUI();
-    });
-    if (dom.focusResetBtn) dom.focusResetBtn.addEventListener('click', () => { localStorage.removeItem(FOCUS_KEY); renderFocusUI(); });
-
-    // --- Notes ---
-    const NOTES_KEY = 'abdus_notes';
-    function getNotes() { try { return JSON.parse(localStorage.getItem(NOTES_KEY)) || []; } catch(e) { return []; } }
-    function saveNotes(notes) { localStorage.setItem(NOTES_KEY, JSON.stringify(notes)); }
-    function renderNotesList() {
-        if (!dom.notesList) return;
-        const notes = getNotes(); dom.notesCount.textContent = notes.length;
-        if (!notes.length) { dom.notesList.innerHTML = '<div class="notes-empty">No notes yet</div>'; return; }
-        dom.notesList.innerHTML = notes.sort((a,b) => b.updated - a.updated).map(n => `<div class="note-card" data-id="${n.id}"><div class="note-card-title">${n.title || 'Untitled'}</div><div class="note-card-preview">${(n.body || '').substring(0, 50)}</div></div>`).join('');
-        dom.notesList.querySelectorAll('.note-card').forEach(c => c.addEventListener('click', () => openNoteEditor(parseInt(c.dataset.id))));
-    }
-    function openNoteEditor(id) {
-        const note = getNotes().find(n => n.id === id); if (!note) return;
-        dom.noteEditorTitle.value = note.title; dom.noteEditorBody.value = note.body;
-        dom.notesList.classList.add('hidden'); dom.noteEditor.classList.remove('hidden');
-        dom.noteEditorBody.focus(); dom.noteEditor.dataset.currentId = id;
-    }
-    if (dom.addNoteBtn) dom.addNoteBtn.addEventListener('click', () => {
-        const notes = getNotes(), id = Date.now();
-        notes.push({ id, title: '', body: '', updated: id });
-        saveNotes(notes); renderNotesList(); openNoteEditor(id);
-    });
-    if (dom.noteBackBtn) dom.noteBackBtn.addEventListener('click', () => {
-        const notes = getNotes(), id = parseInt(dom.noteEditor.dataset.currentId), idx = notes.findIndex(n => n.id === id);
-        if (idx !== -1) { notes[idx].title = dom.noteEditorTitle.value; notes[idx].body = dom.noteEditorBody.value; notes[idx].updated = Date.now(); saveNotes(notes); }
-        dom.noteEditor.classList.add('hidden'); dom.notesList.classList.remove('hidden'); renderNotesList();
-    });
-    if (dom.noteDeleteBtn) dom.noteDeleteBtn.addEventListener('click', () => {
-        const id = parseInt(dom.noteEditor.dataset.currentId);
-        saveNotes(getNotes().filter(n => n.id !== id));
-        dom.noteEditor.classList.add('hidden'); dom.notesList.classList.remove('hidden'); renderNotesList();
-    });
-
-    // --- Apps ---
-    function renderAppsTab(apps, grid, name) {
-        if (!grid) return;
-        grid.innerHTML = (apps || []).map((app, i) => `<a href="${app.url}" class="app-item shortcut" style="--item-index: ${i}"><img src="${app.icon || 'https://icon.horse/icon/' + (new URL(app.url).hostname)}" onerror="this.style.display='none';this.nextSibling.style.display='flex'"> <div class="icon-placeholder" style="display:none">${app.name[0]}</div> <span>${app.name}</span></a>`).join('');
-    }
-    function renderApps() {
-        renderAppsTab(settings.googleApps, dom.googleAppsGrid, 'googleApps');
-        renderAppsTab(settings.msApps, dom.msAppsGrid, 'msApps');
-        renderAppsTab(settings.customApps, dom.customAppsGrid, 'customApps');
-    }
-    if (dom.appsLauncherBtn) dom.appsLauncherBtn.addEventListener('click', (e) => { e.stopPropagation(); dom.appsDropdown.classList.toggle('hidden'); });
-    document.addEventListener('click', () => dom.appsDropdown && dom.appsDropdown.classList.add('hidden'));
-    if (dom.appTabs) dom.appTabs.forEach(tab => tab.addEventListener('click', (e) => {
-        e.stopPropagation(); dom.appTabs.forEach(t => t.classList.remove('active')); dom.appPanes.forEach(p => p.classList.remove('active'));
-        tab.classList.add('active'); document.getElementById(tab.dataset.target).classList.add('active');
-    }));
 
     // --- Init ---
-    renderApps(); applySettings(); updateDateCard(); renderFocusUI(); renderNotesList();
-    setInterval(() => { updateTime(); renderFocusUI(); }, 1000);
-    window.addEventListener('storage', () => { renderFocusUI(); renderNotesList(); });
+    initDB().then(() => {
+        applySettings();
+        updateTime();
+        setInterval(updateTime, 1000);
+        if(settings.backgroundType === 'bing') loadBingGallery();
+    });
+
+    // Modal tabs
+    if (dom.sidebarTabs) {
+        dom.sidebarTabs.forEach(tab => tab.addEventListener('click', () => {
+            dom.sidebarTabs.forEach(t => t.classList.remove('active')); dom.tabPanes.forEach(p => p.classList.remove('active'));
+            tab.classList.add('active'); document.getElementById(tab.dataset.target).classList.add('active');
+        }));
+    }
+    if(dom.settingsBtn) dom.settingsBtn.addEventListener('click', () => dom.modalOverlay.classList.remove('hidden'));
+    if(dom.closeBtn) dom.closeBtn.addEventListener('click', () => dom.modalOverlay.classList.add('hidden'));
+
 })();
