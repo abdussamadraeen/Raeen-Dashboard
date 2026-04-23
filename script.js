@@ -173,16 +173,27 @@
                     if (p.x < 0 || p.x > width) p.vx *= -1;
                     if (p.y < 0 || p.y > height) p.vy *= -1;
                     
-                    // Interaction: follow mouse or avoid
+                    // Interaction: Neural pulse and magnetic pull
                     if (mouse.x !== null) {
                         const dx = mouse.x - p.x;
                         const dy = mouse.y - p.y;
                         const dist = Math.sqrt(dx * dx + dy * dy);
-                        if (dist < 100) {
-                            p.x += dx * 0.01;
-                            p.y += dy * 0.01;
+                        if (dist < 150) {
+                            // Magnetic pull: accelerate towards mouse
+                            const force = (150 - dist) / 150;
+                            p.vx += dx * 0.005 * force;
+                            p.vy += dy * 0.005 * force;
+                            
+                            // Visual feedback: grow size slightly
+                            p.radius = Math.min(4, p.radius + 0.1);
+                        } else {
+                            p.radius = Math.max(1, p.radius - 0.1);
                         }
                     }
+
+                    // Speed limit for sanity
+                    const speed = Math.sqrt(p.vx * p.vx + p.vy * p.vy);
+                    if (speed > 2) { p.vx *= 0.9; p.vy *= 0.9; }
 
                     ctx.beginPath(); ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
                     ctx.fillStyle = `rgba(123, 97, 255, ${p.opacity})`; ctx.fill();
@@ -210,8 +221,16 @@
                     ctx.strokeStyle = `rgba(255, 255, 255, ${p.opacity * 0.3})`; ctx.lineWidth = 2; ctx.stroke();
                 } else if (theme === 'rain') {
                     p.y += p.vy; if (p.y > height) { p.y = -20; p.x = Math.random() * width; }
-                    ctx.beginPath(); ctx.strokeStyle = `rgba(255, 255, 255, ${p.opacity * 0.2})`;
-                    ctx.lineWidth = 1; ctx.moveTo(p.x, p.y); ctx.lineTo(p.x, p.y + 15); ctx.stroke();
+                    
+                    // Rain splashes on mouse
+                    if (mouse.x !== null) {
+                        const dx = mouse.x - p.x, dy = mouse.y - p.y, dist = Math.sqrt(dx * dx + dy * dy);
+                        if (dist < 50) { p.y -= 10; p.vx += (Math.random() - 0.5) * 10; }
+                    }
+
+                    ctx.beginPath(); 
+                    ctx.strokeStyle = `rgba(255, 255, 255, ${p.opacity * 0.3})`;
+                    ctx.lineWidth = 1.5; ctx.moveTo(p.x, p.y); ctx.lineTo(p.x + p.vx, p.y + 20); ctx.stroke();
                 }
             });
             animationId = requestAnimationFrame(animate);
