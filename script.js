@@ -966,9 +966,9 @@
                     }
                     
                     dom.searchSuggestions.innerHTML = suggestions.map((s, i) => 
-                        `<li class="suggestion-item" data-index="${i}" style="--item-index: ${i}">
+                        `<li class="suggestion-item" data-index="${i}" data-text="${s.replace(/"/g,'&quot;')}" style="--item-index: ${i}">
                             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
-                            ${s}
+                            <span>${s}</span>
                         </li>`
                     ).join('');
                     dom.searchSuggestions.classList.remove('hidden');
@@ -1003,12 +1003,12 @@
                 e.preventDefault();
                 selectedSuggestionIndex = (selectedSuggestionIndex + 1) % items.length;
                 items.forEach((item, i) => item.classList.toggle('selected', i === selectedSuggestionIndex));
-                dom.searchInput.value = items[selectedSuggestionIndex].textContent.trim();
+                dom.searchInput.value = items[selectedSuggestionIndex].dataset.text || items[selectedSuggestionIndex].querySelector('span')?.textContent.trim() || '';
             } else if (e.key === 'ArrowUp') {
                 e.preventDefault();
                 selectedSuggestionIndex = selectedSuggestionIndex <= 0 ? items.length - 1 : selectedSuggestionIndex - 1;
                 items.forEach((item, i) => item.classList.toggle('selected', i === selectedSuggestionIndex));
-                dom.searchInput.value = items[selectedSuggestionIndex].textContent.trim();
+                dom.searchInput.value = items[selectedSuggestionIndex].dataset.text || items[selectedSuggestionIndex].querySelector('span')?.textContent.trim() || '';
             }
         });
 
@@ -1016,7 +1016,7 @@
             dom.searchSuggestions.addEventListener('click', (e) => {
                 const item = e.target.closest('.suggestion-item');
                 if (item) {
-                    dom.searchInput.value = item.textContent.trim();
+                    dom.searchInput.value = item.dataset.text || item.querySelector('span')?.textContent.trim() || '';
                     dom.searchSuggestions.classList.add('hidden');
                     dom.searchForm.dispatchEvent(new Event('submit'));
                 }
@@ -1416,14 +1416,17 @@
             img.src = primaryAppUrl;
             img.alt = app.name;
             img.onerror = () => { 
-                if (img.src === primaryAppUrl) {
-                    img.src = fallbackAppUrl;
-                } else {
+                if (img.src !== primaryAppUrl || img.src === fallbackAppUrl) {
+                    // Both primary and fallback failed — show letter placeholder
                     img.style.display = 'none'; 
-                    const placeholder = document.createElement('div');
-                    placeholder.className = 'icon-placeholder';
-                    placeholder.textContent = app.name.charAt(0).toUpperCase();
-                    a.insertBefore(placeholder, span);
+                    if (!a.querySelector('.icon-placeholder')) {
+                        const placeholder = document.createElement('div');
+                        placeholder.className = 'icon-placeholder';
+                        placeholder.textContent = app.name.charAt(0).toUpperCase();
+                        a.insertBefore(placeholder, img.nextSibling);
+                    }
+                } else {
+                    img.src = fallbackAppUrl;
                 }
             };
             a.appendChild(img);
