@@ -172,6 +172,18 @@
                     p.x += p.vx; p.y += p.vy;
                     if (p.x < 0 || p.x > width) p.vx *= -1;
                     if (p.y < 0 || p.y > height) p.vy *= -1;
+                    
+                    // Interaction: follow mouse or avoid
+                    if (mouse.x !== null) {
+                        const dx = mouse.x - p.x;
+                        const dy = mouse.y - p.y;
+                        const dist = Math.sqrt(dx * dx + dy * dy);
+                        if (dist < 100) {
+                            p.x += dx * 0.01;
+                            p.y += dy * 0.01;
+                        }
+                    }
+
                     ctx.beginPath(); ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
                     ctx.fillStyle = `rgba(123, 97, 255, ${p.opacity})`; ctx.fill();
                     for (let j = i + 1; j < particles.length; j++) {
@@ -184,6 +196,16 @@
                     }
                 } else if (theme === 'bubbles') {
                     p.y -= p.vy; if (p.y < -50) p.y = height + 50;
+                    
+                    // Interaction: push bubbles away
+                    if (mouse.x !== null) {
+                        const dx = mouse.x - p.x, dy = mouse.y - p.y, dist = Math.sqrt(dx * dx + dy * dy);
+                        if (dist < 120) {
+                            p.x -= dx * 0.02;
+                            p.y -= dy * 0.02;
+                        }
+                    }
+
                     ctx.beginPath(); ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
                     ctx.strokeStyle = `rgba(255, 255, 255, ${p.opacity * 0.3})`; ctx.lineWidth = 2; ctx.stroke();
                 } else if (theme === 'rain') {
@@ -319,23 +341,48 @@
         }
     }
 
-    // --- Theme Library (Restored) ---
-    const themes = {
-        nature: [
-            { name: 'Rainy Forest', url: 'https://images.unsplash.com/photo-1441974231531-c6227db76b6e?auto=format&fit=crop&w=1920&q=80' },
-            { name: 'Mountain Peak', url: 'https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?auto=format&fit=crop&w=1920&q=80' }
+    // --- Theme Library (Restored with Sections) ---
+    const themeLibrary = {
+        'New': [
+            { name: 'Forza Horizon', url: 'https://images.unsplash.com/photo-1552519507-da3b142c6e3d?auto=format&fit=crop&w=1920&q=80' },
+            { name: 'Superman', url: 'https://images.unsplash.com/photo-1623939012331-989d2144579c?auto=format&fit=crop&w=1920&q=80' },
+            { name: 'Xbox', url: 'https://images.unsplash.com/photo-1605902711622-cfb43c4437b5?auto=format&fit=crop&w=1920&q=80' }
         ],
-        space: [
-            { name: 'Galaxy', url: 'https://images.unsplash.com/photo-1464802686167-b939a6910659?auto=format&fit=crop&w=1920&q=80' }
+        'Featured': [
+            { name: 'Bing', url: 'https://www.bing.com/HPImageArchive.aspx?format=js&idx=0&n=1' },
+            { name: 'Abstract', url: 'https://images.unsplash.com/photo-1541701494587-cb58502866ab?auto=format&fit=crop&w=1920&q=80' },
+            { name: 'Cat', url: 'https://images.unsplash.com/photo-1514888286974-6c03e2ca1dba?auto=format&fit=crop&w=1920&q=80' },
+            { name: 'Dog', url: 'https://images.unsplash.com/photo-1517849845537-4d257902454a?auto=format&fit=crop&w=1920&q=80' },
+            { name: 'Flower', url: 'https://images.unsplash.com/photo-1490750967868-88aa4486c946?auto=format&fit=crop&w=1920&q=80' },
+            { name: 'Ocean', url: 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=1920&q=80' },
+            { name: 'Space', url: 'https://images.unsplash.com/photo-1464802686167-b939a6910659?auto=format&fit=crop&w=1920&q=80' },
+            { name: 'Travel', url: 'https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?auto=format&fit=crop&w=1920&q=80' },
+            { name: 'Wild Animal', url: 'https://images.unsplash.com/photo-1437622368342-7a3d73a34c8f?auto=format&fit=crop&w=1920&q=80' },
+            { name: 'Animated', url: 'https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExM2I4Y2M1N2YyYzhjYjYyYjYyYjYyYjYyYjYyYjYyYjYyYjYyJmVwPXYxX2ludGVybmFsX2dpZl9ieV9pZCZjdD1n/3o7TKMGpxu5L9Yx7u8/giphy.gif' }
         ]
     };
 
     function renderThemeLibrary() {
         if (!dom.galleryGrid) return;
-        const cat = dom.galleryCategorySelect.value;
-        let list = cat === 'all' ? Object.values(themes).flat() : (themes[cat] || []);
-        dom.galleryGrid.innerHTML = list.map(t => `<div class="bg-option" style="background-image:url('${t.url}')" data-url="${t.url}"></div>`).join('');
-        dom.galleryGrid.querySelectorAll('.bg-option').forEach(opt => opt.addEventListener('click', () => {
+        dom.galleryGrid.innerHTML = '';
+        Object.entries(themeLibrary).forEach(([section, items]) => {
+            const sectionHeader = document.createElement('div');
+            sectionHeader.className = 'theme-section-header';
+            sectionHeader.innerHTML = `<span>${section}</span><svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M7.41 15.41L12 10.83l4.59 4.58L18 14l-6-6-6 6z"/></svg>`;
+            dom.galleryGrid.appendChild(sectionHeader);
+
+            const grid = document.createElement('div');
+            grid.className = 'theme-section-grid';
+            grid.innerHTML = items.map(t => `
+                <div class="theme-item" data-url="${t.url}">
+                    <div class="theme-thumb" style="background-image:url('${t.url}')"></div>
+                    <span class="theme-name">${t.name}</span>
+                </div>
+            `).join('');
+            dom.galleryGrid.appendChild(grid);
+        });
+
+        dom.galleryGrid.querySelectorAll('.theme-item').forEach(opt => opt.addEventListener('click', () => {
             settings.backgroundType = 'preset'; settings.backgroundValue = opt.dataset.url;
             saveSettings();
         }));
@@ -464,7 +511,8 @@
     function updateTime() {
         if (!dom.timeEl) return;
         const now = new Date();
-        dom.timeEl.textContent = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: settings.clockFormat !== '24h' });
+        const options = { hour: '2-digit', minute: '2-digit', hour12: false };
+        dom.timeEl.textContent = now.toLocaleTimeString([], options);
     }
 
     // --- Init ---

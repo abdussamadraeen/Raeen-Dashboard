@@ -517,13 +517,37 @@ input:checked + .slider:before { transform: translateX(20px); }
 }
 .source-card input[type="radio"]:checked + .source-card-content svg { color: var(--accent); }
 
-/* ─── Gallery ─── */
-.grid-options { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; max-height: 300px; overflow-y: auto; padding-right: 4px; }
-.grid-options::-webkit-scrollbar { width: 5px; }
-.grid-options::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
-.bg-option { height: 85px; border-radius: 10px; background-size: cover; background-position: center; cursor: pointer; border: 3px solid transparent; transition: all 0.2s; position: relative; }
-.bg-option:hover { transform: scale(1.03); z-index: 2; box-shadow: 0 5px 20px var(--shadow); }
-.bg-option.selected { border-color: var(--accent); box-shadow: 0 0 0 2px var(--accent-glow); }
+/* ─── Theme Store UI ─── */
+.theme-store-container {
+    max-height: 450px; overflow-y: auto; padding-right: 8px;
+}
+.theme-store-container::-webkit-scrollbar { width: 5px; }
+.theme-store-container::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+
+.theme-section-header {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 12px 0; margin-top: 10px; color: var(--text-primary);
+    font-size: 1rem; font-weight: 600; cursor: pointer;
+}
+.theme-section-grid {
+    display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px;
+    margin-bottom: 24px;
+}
+.theme-item {
+    display: flex; flex-direction: column; gap: 8px; cursor: pointer;
+    transition: transform 0.2s;
+}
+.theme-item:hover { transform: translateY(-4px); }
+.theme-thumb {
+    aspect-ratio: 16/10; border-radius: 12px;
+    background-size: cover; background-position: center;
+    border: 2px solid transparent; transition: all 0.2s;
+}
+.theme-item:hover .theme-thumb { border-color: var(--accent); box-shadow: 0 4px 15px var(--accent-glow); }
+.theme-name {
+    font-size: 0.8rem; font-weight: 500; text-align: center;
+    color: var(--text-secondary);
+}
 
 /* ─── Managed Shortcuts List ─── */
 .managed-list { display: flex; flex-direction: column; gap: 6px; margin-top: 12px; }
