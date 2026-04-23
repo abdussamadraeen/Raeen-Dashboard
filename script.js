@@ -203,7 +203,7 @@
                         const dx = mouse.x - p.x, dy = mouse.y - p.y, dist = Math.sqrt(dx * dx + dy * dy);
                         if (dist < 200) {
                             ctx.beginPath(); ctx.strokeStyle = `rgba(123, 97, 255, ${(200 - dist) / 1000})`;
-                            ctx.lineWidth = 1; ctx.moveTo(p.x, p.y); ctx.lineTo(mouse.x, mouse.y); ctx.stroke();
+                            ctx.lineWidth = 1.5; ctx.moveTo(p.x, p.y); ctx.lineTo(mouse.x, mouse.y); ctx.stroke();
                         }
                     }
 
@@ -404,7 +404,10 @@
         ],
         'Special': [
             { name: 'Forza Horizon', url: 'https://images.unsplash.com/photo-1552519507-da3b142c6e3d?auto=format&fit=crop&w=1920&q=80' },
-            { name: 'Animated', url: 'https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExM2I4Y2M1N2YyYzhjYjYyYjYyYjYyYjYyYjYyYjYyYjYyYjYyJmVwPXYxX2ludGVybmFsX2dpZl9ieV9pZCZjdD1n/3o7TKMGpxu5L9Yx7u8/giphy.gif' }
+            { name: 'Neural (Interactive)', url: 'canvas:neural' },
+            { name: 'Bubbles (Interactive)', url: 'canvas:bubbles' },
+            { name: 'Rain (Interactive)', url: 'canvas:rain' },
+            { name: 'Animated GIF', url: 'https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExM2I4Y2M1N2YyYzhjYjYyYjYyYjYyYjYyYjYyYjYyYjYyYjYyJmVwPXYxX2ludGVybmFsX2dpZl9ieV9pZCZjdD1n/3o7TKMGpxu5L9Yx7u8/giphy.gif' }
         ]
     };
 
@@ -438,7 +441,14 @@
         });
 
         dom.galleryGrid.querySelectorAll('.theme-item').forEach(opt => opt.addEventListener('click', () => {
-            settings.backgroundType = 'preset'; settings.backgroundValue = opt.dataset.url;
+            const url = opt.dataset.url;
+            if (url.startsWith('canvas:')) {
+                settings.backgroundType = 'canvas';
+                settings.canvasStyle = url.split(':')[1];
+            } else {
+                settings.backgroundType = 'preset'; 
+                settings.backgroundValue = url;
+            }
             saveSettings();
         }));
     }
@@ -480,7 +490,7 @@
             const media = await getMedia();
             if (media) {
                 if (media.type.startsWith('video')) dom.bgLayer.innerHTML = `<video autoplay muted loop playsinline style="width:100%;height:100%;object-fit:cover;"><source src="${media.data}"></video>`;
-                else { dom.bgLayer.style.backgroundImage = `url('${media.data}')`; dom.bgLayer.style.backgroundSize = 'cover'; }
+                else { dom.bgLayer.style.backgroundImage = `url('${media.data}')`; dom.bgLayer.style.backgroundSize = 'cover'; dom.bgLayer.style.backgroundPosition = 'center'; }
             }
         }
 
@@ -558,7 +568,14 @@
     // --- Event Listeners ---
     if (dom.bgTypeSelect) dom.bgTypeSelect.addEventListener('change', (e) => { settings.backgroundType = e.target.value; saveSettings(); if(e.target.value === 'bing') loadBingGallery(); if(e.target.value === 'preset') renderThemeLibrary(); });
     if (dom.canvasStyleSelect) dom.canvasStyleSelect.addEventListener('change', (e) => { settings.canvasStyle = e.target.value; saveSettings(); });
-    if (dom.bgLocalFile) dom.bgLocalFile.addEventListener('change', async (e) => { if (e.target.files[0]) { await saveMedia(e.target.files[0]); settings.backgroundType = 'local'; saveSettings(); } });
+    if (dom.bgLocalFile) dom.bgLocalFile.addEventListener('change', async (e) => { 
+        if (e.target.files[0]) { 
+            await saveMedia(e.target.files[0]); 
+            settings.backgroundType = 'local'; 
+            settings.backgroundValue = 'local_file'; // Ensure it triggers applySettings correctly
+            saveSettings(); 
+        } 
+    });
     if (dom.bgCustomUrl) dom.bgCustomUrl.addEventListener('change', (e) => { settings.backgroundType = 'custom'; settings.backgroundValue = e.target.value; saveSettings(); });
     if (dom.showMainUIToggle) dom.showMainUIToggle.addEventListener('change', (e) => { settings.showMainUI = e.target.checked; saveSettings(); });
 
