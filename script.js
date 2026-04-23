@@ -197,6 +197,16 @@
 
                     ctx.beginPath(); ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
                     ctx.fillStyle = `rgba(123, 97, 255, ${p.opacity})`; ctx.fill();
+                    
+                    // Interaction: restored old high-performance logic
+                    if (mouse.x !== null) {
+                        const dx = mouse.x - p.x, dy = mouse.y - p.y, dist = Math.sqrt(dx * dx + dy * dy);
+                        if (dist < 200) {
+                            ctx.beginPath(); ctx.strokeStyle = `rgba(123, 97, 255, ${(200 - dist) / 1000})`;
+                            ctx.lineWidth = 1; ctx.moveTo(p.x, p.y); ctx.lineTo(mouse.x, mouse.y); ctx.stroke();
+                        }
+                    }
+
                     for (let j = i + 1; j < particles.length; j++) {
                         const p2 = particles[j];
                         const dx = p.x - p2.x, dy = p.y - p2.y, dist = Math.sqrt(dx * dx + dy * dy);
@@ -416,6 +426,15 @@
                 </div>
             `).join('');
             dom.galleryGrid.appendChild(grid);
+        });
+
+        dom.galleryGrid.querySelectorAll('.theme-section-header').forEach(header => {
+            header.addEventListener('click', () => {
+                const grid = header.nextElementSibling;
+                const isHidden = grid.style.display === 'none';
+                grid.style.display = isHidden ? 'grid' : 'none';
+                header.querySelector('svg').style.transform = isHidden ? 'rotate(0deg)' : 'rotate(180deg)';
+            });
         });
 
         dom.galleryGrid.querySelectorAll('.theme-item').forEach(opt => opt.addEventListener('click', () => {
