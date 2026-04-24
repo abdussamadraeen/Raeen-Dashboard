@@ -1,19 +1,36 @@
 {
   "manifest_version": 3,
-  "name": "Abdus Dashboard Lite",
-  "version": "1.2",
-  "description": "A lightweight, premium new tab dashboard optimized for speed.",
+  "name": "Raeen Dashboard: Personal Productivity New Tab",
+  "version": "1.0",
+  "description": "The ultimate new tab dashboard featuring a Focus Timer, Quick Notes, and customizable backgrounds for maximum productivity.",
   "chrome_url_overrides": {
     "newtab": "index.html"
   },
+  "background": {
+    "service_worker": "background.js"
+  },
   "permissions": [
-    "topSites"
+    "topSites",
+    "storage",
+    "unlimitedStorage"
   ],
   "host_permissions": [
     "https://suggestqueries.google.com/*",
-    "https://*.bing.com/*",
-    "https://bing.biturl.top/*"
+    "https://www.google.com/*",
+    "https://www.bing.com/*"
   ],
+  "content_scripts": [
+    {
+      "matches": ["https://www.google.com/*", "https://www.bing.com/*"],
+      "js": ["content.js"],
+      "run_at": "document_end"
+    }
+  ],
+  "icons": {
+    "16": "icon16.png",
+    "48": "icon48.png",
+    "128": "icon128.png"
+  },
   "content_security_policy": {
     "extension_pages": "script-src 'self'; object-src 'self';"
   }
