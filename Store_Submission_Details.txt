@@ -1,0 +1,45 @@
+# Store Submission Details: Raeen Dashboard (NewTab_Lite)
+
+## General Information
+- **Name:** Raeen Dashboard: Personal Productivity New Tab
+- **Short Description:** A premium, high-performance new tab dashboard with focus tools and search integration.
+- **Detailed Description:** 
+Upgrade your browsing experience with the Raeen Dashboard. This lightweight yet powerful extension replaces your default new tab with a beautiful, productive workspace. 
+
+Features include:
+- Focus Timer: Stay on track with an integrated Pomodoro-style timer.
+- Quick Notes: Jot down ideas instantly with local persistence.
+- Search Suggestions: Real-time suggestions from Google and Bing directly in your search bar.
+- Top Sites: Quick access to your most-visited websites.
+- Premium Aesthetics: Smooth animations, dynamic backgrounds, and a clean, distraction-free UI.
+- Privacy First: All your data is stored locally on your device.
+
+---
+
+## Chrome Web Store - Permission Justifications
+
+1. **storage**: 
+   - Justification: Required to save user preferences, settings (like themes), notes, and the current state of the focus timer.
+2. **unlimitedStorage**: 
+   - Justification: Used to ensure that user-created notes and dashboard settings are not automatically cleared by the browser's cleanup process, guaranteeing data persistence.
+3. **topSites**: 
+   - Justification: Used to retrieve and display the user's most frequently visited websites on the dashboard for a personalized navigation experience.
+4. **Host Permissions (google.com/bing.com)**:
+   - Justification: Used to fetch real-time search suggestions via the respective search engines' suggestion APIs as the user types in the dashboard search bar.
+
+## Chrome Privacy & Security Questions
+- **Remote Code:** Does your extension use remote code? 
+  - Answer: No. All logic is contained within the extension package.
+- **Data Collection:** Does your extension collect or use any user data? 
+  - Answer: No. The extension does not collect, store, or transmit any user data to external servers. All data (notes, settings) stays locally on the user's machine.
+- **Single Purpose:** What is the single purpose of this extension?
+  - Answer: To provide a productive and customizable dashboard on the browser's new tab page.
+
+---
+
+## Microsoft Edge Add-ons - Additional Info
+
+- **Brief Description:** A premium productivity dashboard for your new tab.
+- **Privacy Policy URL:** (If you don't have one, you can state: "This extension does not collect any user data and stores all settings locally on the user's device.")
+- **Support Contact:** [Your Email/Contact]
+- **Category:** Productivity / Personalization
