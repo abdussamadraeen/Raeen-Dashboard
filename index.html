@@ -2,331 +2,487 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Raeen technologies | Elite Architecture</title>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;600;800&family=Playfair+Display:ital,wght@0,700;1,700&display=swap" rel="stylesheet">
-    <style>
-        :root {
-            --bg: #030408;
-            --primary: #c084fc;
-            --secondary: #6366f1;
-            --gold-accent: #fbbf24;
-            --glass: rgba(255, 255, 255, 0.02);
-            --border: rgba(255, 255, 255, 0.08);
-            --ease-out: cubic-bezier(0.32, 0.72, 0, 1);
-        }
-
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-            scroll-behavior: smooth;
-        }
-
-        body {
-            font-family: 'Plus Jakarta Sans', sans-serif;
-            background-color: var(--bg);
-            color: #fff;
-            line-height: 1.5;
-            overflow-x: hidden;
-        }
-
-        /* Ethereal Mesh Background */
-        .mesh-bg {
-            position: fixed;
-            inset: 0;
-            z-index: -1;
-            background: 
-                radial-gradient(circle at 10% 20%, rgba(99, 102, 241, 0.1) 0%, transparent 40%),
-                radial-gradient(circle at 90% 80%, rgba(192, 132, 252, 0.1) 0%, transparent 40%),
-                radial-gradient(circle at 50% 50%, rgba(251, 191, 36, 0.03) 0%, transparent 60%);
-        }
-
-        /* Nav Architecture */
-        nav {
-            position: fixed;
-            top: 24px;
-            left: 50%;
-            transform: translateX(-50%);
-            width: 90%;
-            max-width: 1200px;
-            background: rgba(10, 10, 15, 0.4);
-            backdrop-filter: blur(20px);
-            border: 1px solid var(--border);
-            border-radius: 100px;
-            padding: 12px 32px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            z-index: 1000;
-        }
-
-        .logo {
-            font-family: 'Playfair Display', serif;
-            font-size: 1.25rem;
-            font-weight: 700;
-            letter-spacing: -0.5px;
-        }
-
-        header {
-            min-height: 100dvh;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            padding: 120px 24px;
-            text-align: center;
-        }
-
-        .eyebrow {
-            font-size: 10px;
-            text-transform: uppercase;
-            letter-spacing: 0.25em;
-            color: var(--primary);
-            background: rgba(192, 132, 252, 0.1);
-            padding: 6px 16px;
-            border-radius: 100px;
-            border: 1px solid rgba(192, 132, 252, 0.2);
-            margin-bottom: 32px;
-            animation: fadeIn 1s var(--ease-out);
-        }
-
-        h1 {
-            font-family: 'Playfair Display', serif;
-            font-size: clamp(3.5rem, 10vw, 6.5rem);
-            line-height: 0.95;
-            letter-spacing: -0.04em;
-            margin-bottom: 32px;
-            font-weight: 700;
-            animation: slideUp 1.2s var(--ease-out);
-        }
-
-        h1 i {
-            color: var(--gold-accent);
-            font-style: italic;
-        }
-
-        .hero-desc {
-            max-width: 600px;
-            font-size: 1.15rem;
-            color: #94a3b8;
-            margin-bottom: 48px;
-            font-weight: 300;
-            animation: slideUp 1.4s var(--ease-out);
-        }
-
-        /* Island Button Architecture */
-        .cta-pill {
-            display: inline-flex;
-            align-items: center;
-            padding: 8px 8px 8px 32px;
-            background: #fff;
-            color: #000;
-            text-decoration: none;
-            border-radius: 100px;
-            font-weight: 700;
-            font-size: 0.9rem;
-            transition: 0.4s var(--ease-out);
-            animation: slideUp 1.6s var(--ease-out);
-        }
-
-        .cta-pill:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 20px 40px rgba(99, 102, 241, 0.2);
-        }
-
-        .pill-icon {
-            width: 40px;
-            height: 40px;
-            background: rgba(0, 0, 0, 0.05);
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            margin-left: 16px;
-            transition: 0.4s var(--ease-out);
-        }
-
-        .cta-pill:hover .pill-icon {
-            transform: rotate(45deg);
-            background: rgba(0, 0, 0, 0.1);
-        }
-
-        /* Section Spacing */
-        .section {
-            padding: 160px 24px;
-            max-width: 1400px;
-            margin: 0 auto;
-        }
-
-        /* Double-Bezel Card Architecture */
-        .grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(380px, 1fr));
-            gap: 24px;
-        }
-
-        .bezel-shell {
-            padding: 8px;
-            background: rgba(255, 255, 255, 0.02);
-            border: 1px solid var(--border);
-            border-radius: 40px;
-            transition: 0.4s var(--ease-out);
-        }
-
-        .bezel-core {
-            background: #0a0a0f;
-            padding: 56px;
-            border-radius: 32px;
-            height: 100%;
-            border: 1px solid rgba(255, 255, 255, 0.03);
-            position: relative;
-            overflow: hidden;
-        }
-
-        .bezel-shell:hover {
-            border-color: var(--primary);
-            transform: translateY(-8px);
-        }
-
-        .bezel-core h3 {
-            font-family: 'Playfair Display', serif;
-            font-size: 2rem;
-            margin-bottom: 24px;
-            color: #fff;
-        }
-
-        .bezel-core p {
-            color: #64748b;
-            font-size: 1.1rem;
-            line-height: 1.7;
-        }
-
-        /* Compliance Protocol Section */
-        .compliance-box {
-            background: #000;
-            border-top: 1px solid var(--border);
-            padding: 160px 24px;
-        }
-
-        .compliance-content {
-            max-width: 900px;
-            margin: 0 auto;
-        }
-
-        .protocol-row {
-            display: flex;
-            gap: 80px;
-            margin-bottom: 80px;
-            padding-bottom: 40px;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-        }
-
-        .protocol-title {
-            width: 300px;
-            flex-shrink: 0;
-            font-family: 'Playfair Display', serif;
-            font-size: 1.5rem;
-            color: var(--primary);
-        }
-
-        .protocol-desc {
-            color: #94a3b8;
-            font-size: 1.15rem;
-        }
-
-        footer {
-            padding: 120px 24px;
-            text-align: center;
-            border-top: 1px solid var(--border);
-            color: #475569;
-            font-size: 0.8rem;
-            text-transform: uppercase;
-            letter-spacing: 0.1em;
-        }
-
-        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-        @keyframes slideUp { 
-            from { opacity: 0; transform: translateY(30px); filter: blur(10px); } 
-            to { opacity: 1; transform: translateY(0); filter: blur(0); } 
-        }
-
-        @media (max-width: 768px) {
-            nav { width: 95%; padding: 12px 20px; }
-            .section { padding: 80px 24px; }
-            .protocol-row { flex-direction: column; gap: 20px; }
-            h1 { font-size: 3.5rem; }
-        }
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, minimum-scale=1.0, user-scalable=yes, viewport-fit=cover">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Dashboard">
+    <meta name="theme-color" content="#0f0f17">
+    <meta name="description" content="Personalized productivity dashboard featuring focus timer, notes, and stunning backgrounds.">
+    <title id="page-title">Dashboard</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+    
+    <!-- Safe Anti-Flash -->
+    <style id="safe-guard">
+        html { background: #000; }
+        body { opacity: 0; visibility: hidden; }
     </style>
+    <script>
+        (function() {
+            function reveal() {
+                var guard = document.getElementById('safe-guard');
+                if (guard) guard.remove();
+                if (document.body) {
+                    document.body.style.opacity = '1';
+                    document.body.style.visibility = 'visible';
+                }
+                document.documentElement.style.background = '';
+            }
+            // Automatic reveal after 200ms
+            setTimeout(reveal, 200);
+            // Also try to reveal on load
+            window.addEventListener('load', reveal);
+        })();
+    </script>
 </head>
-<body>
-    <div class="mesh-bg"></div>
+<body data-theme="dark">
+    <!-- Background Elements -->
+    <div id="background-layer" class="background-layer"></div>
+    <div class="overlay"></div>
+    
+    <!-- Clock positioned at top-left like Brave -->
+    <div class="top-left-widget">
+        <header id="clock-widget" class="widget">
+            <div id="time" class="time">--:--</div>
+        </header>
+    </div>
 
-    <nav>
-        <div class="logo">RAEEN TECHNOLOGIES</div>
-        <div style="display: flex; gap: 24px;">
-            <a href="#arch" style="color: #94a3b8; text-decoration: none; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px;">Architecture</a>
-            <a href="#legal" style="color: #94a3b8; text-decoration: none; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px;">Security</a>
-        </div>
-    </nav>
 
-    <header>
-        <div class="eyebrow">The Future of Productivity</div>
-        <h1>Engineered for <br>Total <i>Sovereignty</i></h1>
-        <p class="hero-desc">A high-performance workspace designed by Raeen Technologies. Experience zero-latency productivity with a dashboard that respects your privacy.</p>
-        <a href="#legal" class="cta-pill">
-            Explore Security Protocol
-            <div class="pill-icon">↗</div>
-        </a>
-    </header>
+    <div class="container">
 
-    <div id="arch" class="section">
-        <div class="grid">
-            <div class="bezel-shell">
-                <div class="bezel-core">
-                    <h3>Precision Timer</h3>
-                    <p>Master your work sessions with a high-fidelity focus management system. Built to eliminate context switching and maximize flow-state efficiency.</p>
+
+        <main id="search-widget" class="search-container">
+            <form id="search-form" action="https://www.google.com/search" method="GET">
+                <div class="input-wrapper">
+                    <svg id="search-provider-icon" class="search-icon" focusable="false" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                        <path d="M15.5 14h-.79l-.28-.27A6.471 6.471 0 0 0 16 9.5 6.5 6.5 0 1 0 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"></path>
+                    </svg>
+                    <input type="text" id="search-input" name="q" placeholder="Search..." autocomplete="off" autofocus>
+                    <ul id="search-suggestions" class="suggestions-dropdown hidden"></ul>
+                </div>
+            </form>
+        </main>
+
+        <section id="top-sites-widget" class="quick-links">
+            <!-- Dynamic links injected here -->
+        </section>
+
+        <section id="cards-widget" class="cards-container hidden">
+            <!-- Left Column: Date + Focus Timer -->
+            <div class="cards-left">
+                <div class="info-card" id="card-date">
+                    <div class="info-card-header">
+                        <div class="info-card-icon">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+                        </div>
+                        <div class="info-card-title">Today</div>
+                    </div>
+                    <div class="info-card-content">
+                        <div class="info-card-value" id="card-date-value">--</div>
+                        <div class="info-card-sub" id="card-date-day">--</div>
+                    </div>
+                </div>
+                <div class="info-card" id="card-focus">
+                    <div class="info-card-header">
+                        <div class="info-card-icon" style="background: linear-gradient(135deg, #eab308, #ca8a04);">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+                        </div>
+                        <div class="info-card-title">Focus Timer</div>
+                    </div>
+                    <div class="info-card-content">
+                        <div class="info-card-value" id="card-focus-time">25:00</div>
+                    </div>
+                    <div class="focus-controls">
+                        <button id="focus-toggle-btn" class="focus-btn focus-btn-primary">▶ Start</button>
+                        <button id="focus-reset-btn" class="focus-btn focus-btn-secondary">↺ Reset</button>
+                    </div>
                 </div>
             </div>
-            <div class="bezel-shell">
-                <div class="bezel-core">
-                    <h3>Local Storage</h3>
-                    <p>Enterprise-grade persistence for your thoughts. Your data remains on your hardware, encrypted and accessible without external dependencies.</p>
+            <!-- Right Column: Premium Notes -->
+            <div class="notes-panel" id="notes-panel">
+                <div class="notes-header">
+                    <div class="notes-header-left">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:18px;height:18px;color:var(--accent);"><path d="M12 20h9"></path><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path></svg>
+                        <span class="notes-title">Notes</span>
+                        <span class="notes-count" id="notes-count">0</span>
+                    </div>
+                    <button id="add-note-btn" class="notes-add-btn">+ New</button>
+                </div>
+                <div class="notes-list" id="notes-list">
+                    <!-- Notes rendered by JS -->
+                </div>
+                <div id="notes-empty" class="notes-empty hidden" style="text-align: center; color: var(--text-secondary); padding: 40px 0; font-size: 0.9rem;">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:32px;height:32px;margin-bottom:10px;opacity:0.5;"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+                    <div>No notes yet</div>
+                </div>
+                <!-- Note Editor (shown when editing) -->
+                <div class="note-editor hidden" id="note-editor">
+                    <div class="note-editor-header">
+                        <button id="note-back-btn" class="note-back-btn">← Back</button>
+                        <span class="note-save-status" id="note-save-status">Saved</span>
+                    </div>
+                    <input type="text" id="note-editor-title" class="note-editor-title" placeholder="Title" maxlength="60">
+                    <textarea id="note-editor-body" class="note-editor-body" placeholder="Start typing..."></textarea>
+                    <div class="note-editor-footer">
+                        <span id="note-char-count" class="note-char-count">0 characters</span>
+                        <button id="note-delete-btn" class="note-delete-btn">🗑 Delete</button>
+                    </div>
                 </div>
             </div>
-            <div class="bezel-shell">
-                <div class="bezel-core">
-                    <h3>Search Uplink</h3>
-                    <p>Direct low-latency integration with global search archives. Real-time suggestions delivered at the speed of thought, 100% private.</p>
-                </div>
+        </section>
+    </div>
+
+    <!-- Settings Button -->
+    <button id="settings-btn" class="settings-btn" aria-label="Customize">
+        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M19.14,12.94c0.04-0.3,0.06-0.61,0.06-0.94c0-0.32-0.02-0.64-0.06-0.94l2.03-1.58c0.18-0.14,0.23-0.41,0.12-0.61 l-1.92-3.32c-0.12-0.22-0.37-0.29-0.59-0.22l-2.39,0.96c-0.5-0.38-1.03-0.7-1.62-0.94L14.4,2.81c-0.04-0.24-0.24-0.41-0.48-0.41 h-3.84c-0.24,0-0.43,0.17-0.47,0.41L9.25,5.35C8.66,5.59,8.12,5.92,7.63,6.29L5.24,5.33c-0.22-0.08-0.47,0-0.59,0.22L2.73,8.87 C2.62,9.08,2.66,9.34,2.86,9.48l2.03,1.58C4.84,11.36,4.8,11.69,4.8,12s0.02,0.64,0.06,0.94l-2.03,1.58 c-0.18,0.14-0.23,0.41-0.12,0.61l1.92,3.32c0.12,0.22,0.37,0.29,0.59,0.22l2.39-0.96c0.5,0.38,1.03,0.7,1.62,0.94l0.36,2.54 c0.05,0.24,0.24,0.41,0.48,0.41h3.84c0.24,0,0.43-0.17,0.47-0.41l0.36-2.54c0.59-0.24,1.13-0.56,1.62-0.94l2.39,0.96 c0.22,0.08,0.47,0,0.59-0.22l1.92-3.32c0.12-0.22,0.07-0.49-0.12-0.61L19.14,12.94z M12,15.6c-1.98,0-3.6-1.62-3.6-3.6 s1.62-3.6,3.6-3.6s3.6,1.62,3.6,3.6S13.98,15.6,12,15.6z"/></svg>
+    </button>
+
+    <!-- Add Custom App Modal -->
+    <div id="add-app-modal" class="modal-overlay hidden" style="z-index: 101;">
+        <div class="modal-container" style="max-width: 400px; height: auto;">
+            <header class="modal-header">
+                <h2>Add Custom App</h2>
+                <button id="close-add-app-btn" class="close-btn">&times;</button>
+            </header>
+            <div class="modal-body" style="display: block; padding: 20px;">
+                <input type="text" id="app-name" class="text-input mb-2" placeholder="App Name (e.g., Netflix)">
+                <input type="text" id="app-url" class="text-input mb-2" placeholder="URL (e.g., https://netflix.com)">
+                <input type="text" id="app-icon" class="text-input mb-4" placeholder="Icon URL (optional)">
+                <button id="save-app-btn" class="primary-btn" style="width: 100%;">Save</button>
             </div>
         </div>
     </div>
 
-    <div id="legal" class="compliance-box">
-        <div class="compliance-content">
-            <h2 style="font-family: 'Playfair Display', serif; font-size: 3rem; margin-bottom: 80px;">Privacy Protocol</h2>
-            
-            <div class="protocol-row">
-                <div class="protocol-title">Network Integrity</div>
-                <div class="protocol-desc">All system processes are executed locally. Raeen Dashboard maintains no external database connections, ensuring zero-tracking of your data.</div>
-            </div>
+    <!-- Settings Modal -->
+    <div id="settings-modal" class="modal-overlay hidden">
+        <div class="modal-container">
+            <header class="modal-header">
+                <h2>Settings</h2>
+                <button id="close-modal-btn" class="close-btn">&times;</button>
+            </header>
+            <div class="modal-body">
+                <aside class="modal-sidebar">
+                    <button class="sidebar-tab active" data-target="tab-background">
+                        <svg class="tab-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>
+                        Background Image
+                    </button>
+                    <button class="sidebar-tab" data-target="tab-appearance">
+                        <svg class="tab-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2.5a4.5 4.5 0 0 0-4.5 4.5v1.5H6a2 2 0 0 0-2 2v7a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-7a2 2 0 0 0-2-2h-1.5V7a4.5 4.5 0 0 0-4.5-4.5zM12 4a3 3 0 0 1 3 3v1.5H9V7a3 3 0 0 1 3-3z"/></svg>
+                        Appearance
+                    </button>
+                    <button class="sidebar-tab" data-target="tab-search">
+                        <svg class="tab-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                        Search
+                    </button>
+                    <button class="sidebar-tab" data-target="tab-topsites">
+                        <svg class="tab-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
+                        Top Sites
+                    </button>
+                    <button class="sidebar-tab" data-target="tab-clock">
+                        <svg class="tab-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+                        Clock
+                    </button>
+                    <button class="sidebar-tab" data-target="tab-cards">
+                        <svg class="tab-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="4" width="16" height="16" rx="2" ry="2"></rect><line x1="4" y1="10" x2="20" y2="10"></line><line x1="10" y1="4" x2="10" y2="20"></line></svg>
+                        Cards
+                    </button>
+                </aside>
+                <main class="modal-content">
+                    
+                    <!-- Background Tab -->
+                    <div id="tab-background" class="tab-pane active">
+                        <div class="settings-group mt-0">
+                            <label>Background Type</label>
+                            <select id="bg-type-select" class="custom-select">
+                                <option value="solid">Solid Colors &amp; Gradients</option>
+                                <option value="bing">Bing</option>
+                                <option value="google">Google</option>
+                                <option value="local">Local File (Image/Video)</option>
+                            </select>
+                        </div>
 
-            <div class="protocol-row">
-                <div class="protocol-title">Data Sovereignty</div>
-                <div class="protocol-desc">We do not hold or manage user metrics. Every configuration and note is stored exclusively within your local browser environment.</div>
-            </div>
+                        <div id="bg-solid-options" class="settings-group hidden">
+                            <label>Color Palette</label>
+                            <div class="color-palette mb-4">
+                                <div class="color-swatch" style="background: #1a1a2e" data-color="#1a1a2e"></div>
+                                <div class="color-swatch" style="background: #2d3748" data-color="#2d3748"></div>
+                                <div class="color-swatch" style="background: #000000" data-color="#000000"></div>
+                                <div class="color-swatch" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%)" data-color="linear-gradient(135deg, #667eea 0%, #764ba2 100%)"></div>
+                                <div class="color-swatch" style="background: linear-gradient(135deg, #ff9a9e 0%, #fecfef 99%, #fecfef 100%)" data-color="linear-gradient(135deg, #ff9a9e 0%, #fecfef 99%, #fecfef 100%)"></div>
+                                <div class="color-swatch" style="background: linear-gradient(135deg, #13547a 0%, #80d0c7 100%)" data-color="linear-gradient(135deg, #13547a 0%, #80d0c7 100%)"></div>
+                                <div class="color-swatch" style="background: linear-gradient(135deg, #ff0844 0%, #ffb199 100%)" data-color="linear-gradient(135deg, #ff0844 0%, #ffb199 100%)"></div>
+                                <div class="color-swatch" style="background: linear-gradient(135deg, #09203f 0%, #537895 100%)" data-color="linear-gradient(135deg, #09203f 0%, #537895 100%)"></div>
+                                <div class="color-swatch" style="background: linear-gradient(to right, #43e97b 0%, #38f9d7 100%)" data-color="linear-gradient(to right, #43e97b 0%, #38f9d7 100%)"></div>
+                                <div class="color-swatch" style="background: linear-gradient(to top, #0c3483 0%, #a2b6df 100%, #6b8cce 100%, #a2b6df 100%)" data-color="linear-gradient(to top, #0c3483 0%, #a2b6df 100%, #6b8cce 100%, #a2b6df 100%)"></div>
+                                <div class="color-swatch" style="background: linear-gradient(to right, #243949 0%, #517fa4 100%)" data-color="linear-gradient(to right, #243949 0%, #517fa4 100%)"></div>
+                                <div class="color-swatch" style="background: #f8fafc" data-color="#f8fafc"></div>
+                            </div>
+                            <label>Custom Color</label>
+                            <div style="display: flex; gap: 10px; align-items: center;">
+                                <input type="color" id="bg-color-picker" value="#1a1a2e" style="height: 40px; cursor: pointer;">
+                                <span class="subtext">Pick a custom solid color</span>
+                            </div>
+                        </div>
 
-            <div class="protocol-row">
-                <div class="protocol-title">Secure Bridging</div>
-                <div class="protocol-desc">Search suggestions utilize direct, secure API bridges to global providers. No intermediate servers witness or log your activity.</div>
+                        <div id="bg-local-options" class="settings-group hidden">
+                            <label>Upload Local Media</label>
+                            <input type="file" id="bg-local-file" class="text-input" accept="image/*,video/*">
+                            <p class="subtext mt-2">Select an image or video (.mp4, .webm) from your computer.</p>
+                        </div>
+                        
+                        <!-- Ambient Sound removed per request -->
+                    </div>
+
+                    <!-- Appearance Tab -->
+                    <div id="tab-appearance" class="tab-pane">
+                        <div class="settings-group mt-0">
+                            <label>Dashboard Title</label>
+                            <input type="text" id="dashboard-title-input" class="text-input" placeholder="e.g., My Dashboard" maxlength="20">
+                            <p class="subtext mt-2">Personalize the title shown in the browser tab and settings.</p>
+                        </div>
+                        <div class="settings-group">
+                            <label>Dashboard Theme</label>
+                            <p class="subtext mb-4">Choose how the settings menu and widgets should look.</p>
+                            <div class="radio-list">
+                                <label class="radio-item">
+                                    <input type="radio" name="theme_preference" value="system" checked>
+                                    <span class="custom-radio"></span>
+                                    Follow System Settings
+                                </label>
+                                <label class="radio-item">
+                                    <input type="radio" name="theme_preference" value="dark">
+                                    <span class="custom-radio"></span>
+                                    Dark Mode
+                                </label>
+                                <label class="radio-item">
+                                    <input type="radio" name="theme_preference" value="light">
+                                    <span class="custom-radio"></span>
+                                    Light Mode
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Search Tab -->
+                    <div id="tab-search" class="tab-pane">
+                        <div class="card-container">
+                            <div class="settings-row">
+                                <span>Show search widget in new tabs</span>
+                                <label class="switch">
+                                    <input type="checkbox" id="toggle-search" checked>
+                                    <span class="slider round"></span>
+                                </label>
+                            </div>
+                        </div>
+                        <div class="settings-group mt-0">
+                            <label>Standard Engines</label>
+                            <div class="radio-list card-container" style="padding: 16px;">
+                                <label class="radio-item">
+                                    <input type="radio" name="search_engine" value="google" checked>
+                                    <span class="custom-radio"></span>
+                                    <img src="https://www.google.com/favicon.ico" class="engine-icon" alt=""> Google
+                                </label>
+                                <label class="radio-item mt-2">
+                                    <input type="radio" name="search_engine" value="duckduckgo">
+                                    <span class="custom-radio"></span>
+                                    <img src="https://duckduckgo.com/favicon.ico" class="engine-icon" alt=""> DuckDuckGo
+                                </label>
+                                <label class="radio-item mt-2">
+                                    <input type="radio" name="search_engine" value="brave">
+                                    <span class="custom-radio"></span>
+                                    <img src="https://brave.com/favicon.ico" class="engine-icon" alt=""> Brave
+                                </label>
+                                <label class="radio-item mt-2">
+                                    <input type="radio" name="search_engine" value="bing">
+                                    <span class="custom-radio"></span>
+                                    <img src="https://www.bing.com/favicon.ico" class="engine-icon" alt=""> Bing
+                                </label>
+                            </div>
+                        </div>
+
+                        <div class="settings-group">
+                            <label>AI Models</label>
+                            <div class="radio-list card-container" style="padding: 16px;">
+                                <label class="radio-item">
+                                    <input type="radio" name="search_engine" value="chatgpt">
+                                    <span class="custom-radio"></span>
+                                    <img src="https://chatgpt.com/favicon.ico" class="engine-icon" alt=""> ChatGPT
+                                </label>
+                                <label class="radio-item mt-2">
+                                    <input type="radio" name="search_engine" value="perplexity">
+                                    <span class="custom-radio"></span>
+                                    <img src="https://www.google.com/s2/favicons?sz=64&domain=perplexity.ai" class="engine-icon" alt=""> Perplexity
+                                </label>
+                            </div>
+                        </div>
+
+                        <div class="settings-group">
+                            <label>Custom Search Engine</label>
+                            <div class="card-container" style="padding: 16px;">
+                                <label class="radio-item">
+                                    <input type="radio" name="search_engine" value="custom_engine">
+                                    <span class="custom-radio"></span>
+                                    Use Custom Engine
+                                </label>
+                                <div id="custom-engine-input-group" class="mt-4" style="display: block;">
+                                    <p class="subtext mb-2">Enter search URL with <strong>%s</strong> as placeholder for query.</p>
+                                    <input type="text" id="custom-search-url" class="text-input" placeholder="https://www.google.com/search?q=%s">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Top Sites Tab -->
+                    <div id="tab-topsites" class="tab-pane">
+                        <div class="card-container">
+                            <div class="settings-row">
+                                <span>Show Top Sites</span>
+                                <label class="switch">
+                                    <input type="checkbox" id="toggle-topsites" checked>
+                                    <span class="slider round"></span>
+                                </label>
+                            </div>
+                        </div>
+                        <div class="settings-group mt-0 mb-4">
+                            <label>Source</label>
+                            <div class="source-cards-grid">
+                                <label class="source-card">
+                                    <input type="radio" name="topsites_source" value="favorites" checked>
+                                    <div class="source-card-content">
+                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
+                                        <div class="source-card-text">
+                                            <strong>Favorites</strong>
+                                            <span>Curated by you</span>
+                                        </div>
+                                    </div>
+                                </label>
+                                <label class="source-card">
+                                    <input type="radio" name="topsites_source" value="frequently_visited">
+                                    <div class="source-card-content">
+                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+                                        <div class="source-card-text">
+                                            <strong>Frequently Visited</strong>
+                                            <span>Browser history</span>
+                                        </div>
+                                    </div>
+                                </label>
+                            </div>
+                        </div>
+                        <div class="settings-group" id="manage-shortcuts-group">
+                            <label>Manage Shortcuts</label>
+                            <p class="subtext">Add or remove your custom shortcuts below.</p>
+                            <div class="shortcut-manager mt-2">
+                                <input type="text" id="new-shortcut-name" class="text-input mb-2" placeholder="Name (e.g. GitHub)">
+                                <input type="text" id="new-shortcut-url" class="text-input mb-2" placeholder="URL (e.g. https://github.com)">
+                                <button id="add-shortcut-btn" class="primary-btn" style="width: 100%;">Add Shortcut</button>
+                            </div>
+                            <div id="shortcuts-list" class="managed-list mt-4">
+                                <!-- Managed items go here -->
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Clock Tab -->
+                    <div id="tab-clock" class="tab-pane">
+                        <div class="card-container">
+                            <div class="settings-row">
+                                <span>Show clock</span>
+                                <label class="switch">
+                                    <input type="checkbox" id="toggle-clock" checked>
+                                    <span class="slider round"></span>
+                                </label>
+                            </div>
+                            <div class="settings-row" style="border-bottom: none;">
+                                <span>Format</span>
+                                <select id="clock-format-select" class="custom-select" style="width: auto; min-width: 180px;">
+                                    <option value="auto">Automatic (en-US)</option>
+                                    <option value="12h">12-hour clock</option>
+                                    <option value="24h">24-hour clock</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Cards Tab -->
+                    <div id="tab-cards" class="tab-pane">
+                        <div class="card-container">
+                            <div class="settings-row">
+                                <span>Show Cards</span>
+                                <label class="switch">
+                                    <input type="checkbox" id="toggle-cards">
+                                    <span class="slider round"></span>
+                                </label>
+                            </div>
+                            <div class="settings-row" style="border-bottom: none;">
+                                <span>Show All UI (Immersive)</span>
+                                <label class="switch">
+                                    <input type="checkbox" id="show-main-ui-toggle" checked>
+                                    <span class="slider round"></span>
+                                </label>
+                            </div>
+                        </div>
+                        <div class="settings-group">
+                            <label>Available Widgets</label>
+                            <div class="source-cards-grid" style="grid-template-columns: 1fr;">
+                                <div class="settings-row" style="margin-top: 6px; padding: 12px 16px; background: var(--glass-bg); border-radius: 12px; border: 1px solid var(--glass-border);">
+                                    <div style="display: flex; align-items: center; gap: 12px;">
+                                        <svg viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2" style="width:22px;height:22px;flex-shrink:0;"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+                                        <div class="source-card-text">
+                                            <strong>Date Card</strong>
+                                            <span>Shows today's date and day of the week</span>
+                                        </div>
+                                    </div>
+                                    <label class="switch">
+                                        <input type="checkbox" id="toggle-card-date" checked>
+                                        <span class="slider round"></span>
+                                    </label>
+                                </div>
+                                <div class="settings-row" style="margin-top: 8px; padding: 12px 16px; background: var(--glass-bg); border-radius: 12px; border: 1px solid var(--glass-border);">
+                                    <div style="display: flex; align-items: center; gap: 12px;">
+                                        <svg viewBox="0 0 24 24" fill="none" stroke="#eab308" stroke-width="2" style="width:22px;height:22px;flex-shrink:0;"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+                                        <div class="source-card-text">
+                                            <strong>Focus Timer</strong>
+                                            <span>25-minute Pomodoro timer for productivity</span>
+                                        </div>
+                                    </div>
+                                    <label class="switch">
+                                        <input type="checkbox" id="toggle-card-focus" checked>
+                                        <span class="slider round"></span>
+                                    </label>
+                                </div>
+                                <div class="settings-row" style="margin-top: 8px; padding: 12px 16px; background: var(--glass-bg); border-radius: 12px; border: 1px solid var(--glass-border);">
+                                    <div style="display: flex; align-items: center; gap: 12px;">
+                                        <svg viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2" style="width:22px;height:22px;flex-shrink:0;"><polyline points="9 11 12 14 22 4"></polyline><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"></path></svg>
+                                        <div class="source-card-text">
+                                            <strong>Quick Note</strong>
+                                            <span>Jot down ideas, saved automatically</span>
+                                        </div>
+                                    </div>
+                                    <label class="switch">
+                                        <input type="checkbox" id="toggle-card-note" checked>
+                                        <span class="slider round"></span>
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                </main>
             </div>
         </div>
+        <div style="position: fixed; bottom: 20px; right: 20px; font-size: 0.75rem; color: rgba(255,255,255,0.3); pointer-events: none; z-index: 1000;">
+            Created by Raeen Technologies
+        </div>
     </div>
-
-    <footer>
-        &copy; 2026 RAEEN TECHNOLOGIES // GLOBAL PERFORMANCE STANDARDS <br>
-        BUILT FOR THE NEWTAB_LITE DEPLOYMENT
-    </footer>
+    
+    <audio id="ambient-audio" loop></audio>
+    <button id="video-sound-btn" class="video-sound-btn hidden" title="Toggle Sound">
+        <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
+            <path id="sound-icon-path" d="M3 9v6h4l5 5V4L7 9H3zM16.5 12c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02z"/>
+        </svg>
+    </button>
+    <script src="script.js"></script>
 </body>
 </html>
