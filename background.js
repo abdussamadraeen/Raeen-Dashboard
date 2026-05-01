@@ -12,12 +12,12 @@ chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
         const url = tab.url || tab.pendingUrl || '';
         if (!url) return;
 
-        const isNewTab = url.startsWith('chrome://newtab') || 
-                         url.startsWith('edge://newtab') || 
-                         url.startsWith('brave://newtab') ||
-                         url.startsWith('about:newtab') || 
-                         url.includes(chrome.runtime.id + '/index.html');
-        
+        const isNewTab = url.startsWith('chrome://newtab') ||
+            url.startsWith('edge://newtab') ||
+            url.startsWith('brave://newtab') ||
+            url.startsWith('about:newtab') ||
+            url.includes(chrome.runtime.id + '/index.html');
+
         const hasNoRedirect = url.includes('no_redirect=true');
 
         if (isNewTab && !hasNoRedirect) {

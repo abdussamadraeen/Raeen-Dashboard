@@ -1,4 +1,4 @@
-(function() {
+(function () {
     'use strict';
     const urlParams = new URLSearchParams(window.location.search);
     const noRedirect = urlParams.has('no_redirect');
@@ -110,19 +110,14 @@
                 chrome.storage.local.set({ 'raeen_dashboard_settings': settings });
             }
         }
-    } catch(e){}
+    } catch (e) { }
 
-    // --- IMMEDIATE REDIRECT CHECK ---
-    if (!noRedirect && (settings.backgroundType === 'google' || settings.backgroundType === 'bing')) {
-        const redirectUrl = settings.backgroundType === 'google' 
-            ? "https://www.google.com/webhp?raeen_dashboard=true" 
-            : "https://www.bing.com/?raeen_dashboard=true";
-        window.location.replace(redirectUrl);
-        return; // Stop further execution
-    }
+    // --- NO REDIRECT (IFRAME MODE) ---
+    // Instead of redirecting the whole window, we stay on index.html 
+    // to keep the address bar clean (empty).
 
     function saveSettings(noApply = false) {
-        try { localStorage.setItem('raeen_dashboard_settings', JSON.stringify(settings)); } catch (e) {}
+        try { localStorage.setItem('raeen_dashboard_settings', JSON.stringify(settings)); } catch (e) { }
         if (typeof chrome !== 'undefined' && chrome.storage) {
             chrome.storage.local.set({ 'raeen_dashboard_settings': settings });
         }
@@ -204,7 +199,9 @@
         noteEditorBody: document.getElementById('note-editor-body'),
         noteCharCount: document.getElementById('note-char-count'),
         noteSaveStatus: document.getElementById('note-save-status'),
-        noteDeleteBtn: document.getElementById('note-delete-btn')
+        noteDeleteBtn: document.getElementById('note-delete-btn'),
+        searchProviderIcon: document.getElementById('search-provider-icon'),
+        engineFrame: document.getElementById('engine-frame')
     };
 
     // --- State Tracking ---
@@ -243,13 +240,27 @@
         const t = settings.backgroundType;
         const v = settings.backgroundValue;
 
-        // Immediate redirect if Google/Bing theme is active
+        // No-Redirect Iframe Logic
         if (!noRedirect && (t === 'google' || t === 'bing')) {
-            const redirectUrl = t === 'google' 
-                ? "https://www.google.com/webhp?raeen_dashboard=true" 
+            const frameUrl = t === 'google'
+                ? "https://www.google.com/webhp?raeen_dashboard=true"
                 : "https://www.bing.com/?raeen_dashboard=true";
-            window.location.replace(redirectUrl);
+
+            if (dom.engineFrame) {
+                if (dom.engineFrame.src !== frameUrl) dom.engineFrame.src = frameUrl;
+                dom.engineFrame.classList.remove('hidden');
+                // Optionally hide dashboard UI to make it feel like the real site
+                if (dom.searchWidget) dom.searchWidget.classList.add('hidden');
+                if (dom.topSitesWidget) dom.topSitesWidget.classList.add('hidden');
+                if (dom.clockWidget) dom.clockWidget.classList.add('hidden');
+                if (dom.cardsWidget) dom.cardsWidget.classList.add('hidden');
+            }
             return;
+        } else {
+            if (dom.engineFrame) {
+                dom.engineFrame.classList.add('hidden');
+                dom.engineFrame.src = 'about:blank';
+            }
         }
 
         // Only update background if it changed
@@ -270,21 +281,21 @@
                 const media = await getMedia();
                 if (media && media.data) {
                     currentBgObjectURL = URL.createObjectURL(media.data);
-                    
+
                     if (media.type.startsWith('video')) {
                         dom.bgLayer.innerHTML = `<video autoplay loop playsinline muted style="width:100%;height:100%;object-fit:cover;pointer-events:none;"></video>`;
                         const video = dom.bgLayer.querySelector('video');
                         video.src = currentBgObjectURL;
                         video.muted = settings.videoMuted;
-                        
+
                         if (dom.videoSoundBtn) {
                             dom.videoSoundBtn.classList.remove('hidden');
                             dom.videoSoundBtn.classList.toggle('muted', settings.videoMuted);
                         }
-                    } else { 
-                        dom.bgLayer.style.backgroundImage = `url('${currentBgObjectURL}')`; 
-                        dom.bgLayer.style.backgroundSize = 'cover'; 
-                        dom.bgLayer.style.backgroundPosition = 'center'; 
+                    } else {
+                        dom.bgLayer.style.backgroundImage = `url('${currentBgObjectURL}')`;
+                        dom.bgLayer.style.backgroundSize = 'cover';
+                        dom.bgLayer.style.backgroundPosition = 'center';
                         if (dom.videoSoundBtn) dom.videoSoundBtn.classList.add('hidden');
                     }
                 } else {
@@ -320,27 +331,28 @@
         }
 
         // Title Personalization
-        if(dom.pageTitle) dom.pageTitle.textContent = settings.dashboardTitle || 'Dashboard';
-        if(dom.modalHeaderTitle) dom.modalHeaderTitle.textContent = settings.dashboardTitle || 'Settings';
+        if (dom.pageTitle) dom.pageTitle.textContent = settings.dashboardTitle || 'Dashboard';
+        if (dom.modalHeaderTitle) dom.modalHeaderTitle.textContent = settings.dashboardTitle || 'Settings';
 
         // UI Toggles
-        if(dom.searchWidget) dom.searchWidget.classList.toggle('hidden', !settings.showSearch);
-        if(dom.topSitesWidget) dom.topSitesWidget.classList.toggle('hidden', !settings.showTopSites);
-        if(dom.clockWidget) dom.clockWidget.classList.toggle('hidden', !settings.showClock);
-        if(dom.cardsWidget) {
+        if (dom.searchWidget) dom.searchWidget.classList.toggle('hidden', !settings.showSearch);
+        if (dom.topSitesWidget) dom.topSitesWidget.classList.toggle('hidden', !settings.showTopSites);
+        if (dom.clockWidget) dom.clockWidget.classList.toggle('hidden', !settings.showClock);
+        if (dom.cardsWidget) {
             const hasAnyCard = settings.showCardDate || settings.showCardFocus || settings.showCardNote;
             dom.cardsWidget.classList.toggle('hidden', !settings.showCards || !hasAnyCard);
         }
-        
+
         // Individual Card Toggles
-        if(dom.cardDateEl) dom.cardDateEl.classList.toggle('hidden', !settings.showCardDate);
-        if(dom.cardFocusEl) dom.cardFocusEl.classList.toggle('hidden', !settings.showCardFocus);
-        if(dom.cardNoteEl) dom.cardNoteEl.classList.toggle('hidden', !settings.showCardNote);
-        
+        if (dom.cardDateEl) dom.cardDateEl.classList.toggle('hidden', !settings.showCardDate);
+        if (dom.cardFocusEl) dom.cardFocusEl.classList.toggle('hidden', !settings.showCardFocus);
+        if (dom.cardNoteEl) dom.cardNoteEl.classList.toggle('hidden', !settings.showCardNote);
+
         syncModalUI();
         renderTopSites();
         updateTime();
-        
+        updateSearchUI();
+
         if (dom.modalOverlay && autoOpenSettings && !window.settingsOpenedOnce) {
             window.settingsOpenedOnce = true;
             dom.modalOverlay.classList.remove('hidden');
@@ -358,8 +370,8 @@
         if (dom.bgTypeSelect) {
             dom.bgTypeSelect.value = settings.backgroundType;
             const t = settings.backgroundType;
-            if(dom.bgSolidOptions) dom.bgSolidOptions.classList.toggle('hidden', t !== 'solid');
-            if(dom.bgLocalOptions) dom.bgLocalOptions.classList.toggle('hidden', t !== 'local');
+            if (dom.bgSolidOptions) dom.bgSolidOptions.classList.toggle('hidden', t !== 'solid');
+            if (dom.bgLocalOptions) dom.bgLocalOptions.classList.toggle('hidden', t !== 'local');
         }
         if (dom.ambientSoundSelect) dom.ambientSoundSelect.value = settings.ambientSound || 'none';
         if (dom.ambientVolume) dom.ambientVolume.value = settings.ambientVolume || 50;
@@ -373,7 +385,7 @@
         if (dom.toggleCardNote) dom.toggleCardNote.checked = settings.showCardNote;
         if (dom.toggleClock) dom.toggleClock.checked = settings.showClock;
         if (dom.dashboardTitleInput) dom.dashboardTitleInput.value = settings.dashboardTitle || '';
-        
+
         if (dom.themeRadios) {
             dom.themeRadios.forEach(r => {
                 r.checked = (r.value === settings.themePreference);
@@ -407,9 +419,9 @@
                     const suggestions = data[1] || [];
                     if (!dom.searchSuggestions) return;
                     if (suggestions.length === 0) { dom.searchSuggestions.classList.add('hidden'); return; }
-                    dom.searchSuggestions.innerHTML = suggestions.map((s, i) => `<li class="suggestion-item" data-text="${s.replace(/"/g,'&quot;')}" style="--item-index: ${i}"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg><span>${s}</span></li>`).join('');
+                    dom.searchSuggestions.innerHTML = suggestions.map((s, i) => `<li class="suggestion-item" data-text="${s.replace(/"/g, '&quot;')}" style="--item-index: ${i}"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg><span>${s}</span></li>`).join('');
                     dom.searchSuggestions.classList.remove('hidden');
-                } catch(err) {}
+                } catch (err) { }
             }, 150);
         });
 
@@ -424,10 +436,10 @@
             });
         }
     }
-
     if (dom.searchForm) {
         dom.searchForm.addEventListener('submit', (e) => {
             const engine = settings.searchEngine;
+
             if (engine === 'custom_engine') {
                 e.preventDefault();
                 const q = dom.searchInput.value;
@@ -444,11 +456,33 @@
         });
     }
 
+    function updateSearchUI() {
+        if (!dom.searchInput || !dom.searchProviderIcon) return;
+        const engine = settings.searchEngine;
+
+        // Update Placeholder
+        const engineName = engine.charAt(0).toUpperCase() + engine.slice(1);
+        dom.searchInput.placeholder = `Search with ${engineName}...`;
+
+        // Update Icon (Simple paths for common engines)
+        if (engine === 'google') {
+            dom.searchProviderIcon.innerHTML = `<path d="M12.48 10.92v3.28h4.74c-.18 1.1-.9 2.03-2.03 2.75v2.28h3.3c2.04-1.88 3.23-4.66 3.23-7.98 0-.8-.08-1.58-.22-2.33h-6.27z" fill="#4285F4"/><path d="M12.48 21c1.88 0 3.46-.62 4.62-1.7l-3.3-2.28c-1 .67-2.28 1.07-3.8 1.07-2.92 0-5.4-1.98-6.28-4.64H.44v2.4C1.6 18.2 4.8 21 12.48 21z" fill="#34A853"/><path d="M6.2 13.45c-.22-.67-.35-1.38-.35-2.13s.13-1.46.35-2.13V6.79H.44C-.16 8.04-.5 9.42-.5 11s.34 2.96.94 4.21l5.76-1.76z" fill="#FBBC05"/><path d="M12.48 5.86c1.64 0 3.12.56 4.28 1.66l3.2-3.2C17.94 2.34 15.44 1 12.48 1 4.8 1 1.6 3.8.44 6.79l5.76 1.76c.88-2.66 3.36-4.64 6.28-4.64z" fill="#EA4335"/>`;
+            dom.searchProviderIcon.setAttribute('viewBox', '0 0 24 24');
+        } else if (engine === 'bing') {
+            dom.searchProviderIcon.innerHTML = `<path d="M10 2L4 4.5V17.5L10 22L16 17.5V10L10 12.5V7L13.5 8.5L14.5 7.5L10 4V2Z" fill="#00a1f1"/>`;
+            dom.searchProviderIcon.setAttribute('viewBox', '0 0 24 24');
+        } else {
+            // Default magnifying glass
+            dom.searchProviderIcon.innerHTML = `<path d="M15.5 14h-.79l-.28-.27A6.471 6.471 0 0 0 16 9.5 6.5 6.5 0 1 0 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"></path>`;
+            dom.searchProviderIcon.setAttribute('viewBox', '0 0 24 24');
+        }
+    }
+
     // --- Top Sites Render ---
     function renderTopSites() {
-        if(!dom.topSitesWidget) return;
+        if (!dom.topSitesWidget) return;
         dom.topSitesWidget.innerHTML = '';
-        
+
         if (settings.topSitesSource === 'frequently_visited' && typeof chrome !== 'undefined' && chrome.topSites) {
             chrome.topSites.get(sites => {
                 const limit = sites.slice(0, 10);
@@ -461,7 +495,7 @@
         } else {
             settings.shortcuts.forEach((sc, i) => {
                 const a = document.createElement('a'); a.href = sc.url; a.className = 'shortcut'; a.style.setProperty('--item-index', i);
-                a.innerHTML = `<img src="${sc.icon || 'https://www.google.com/s2/favicons?domain='+sc.url+'&sz=128'}"><span>${sc.name}</span>`;
+                a.innerHTML = `<img src="${sc.icon || 'https://www.google.com/s2/favicons?domain=' + sc.url + '&sz=128'}"><span>${sc.name}</span>`;
                 dom.topSitesWidget.appendChild(a);
             });
         }
@@ -498,7 +532,7 @@
             }
         });
     }
-    
+
     if (dom.topsitesSourceRadios) {
         dom.topsitesSourceRadios.forEach(r => r.addEventListener('change', (e) => {
             settings.topSitesSource = e.target.value;
@@ -511,24 +545,18 @@
         saveSettings();
     });
 
-    if (dom.bgTypeSelect) dom.bgTypeSelect.addEventListener('change', (e) => { 
-        settings.backgroundType = e.target.value; 
-        saveSettings(); 
-        // Force redirect if manually selected from the menu
-        if (e.target.value === 'google' || e.target.value === 'bing') {
-            const redirectUrl = e.target.value === 'google' 
-                ? "https://www.google.com/webhp?raeen_dashboard=true" 
-                : "https://www.bing.com/?raeen_dashboard=true";
-            window.location.replace(redirectUrl);
-        }
+    if (dom.bgTypeSelect) dom.bgTypeSelect.addEventListener('change', (e) => {
+        settings.backgroundType = e.target.value;
+        saveSettings();
+        // Logic handled in applySettings via Iframe
     });
-    if (dom.bgLocalFile) dom.bgLocalFile.addEventListener('change', async (e) => { 
-        if (e.target.files[0]) { 
-            await saveMedia(e.target.files[0]); 
-            settings.backgroundType = 'local'; 
-            settings.backgroundValue = 'local_bg'; 
-            saveSettings(); 
-        } 
+    if (dom.bgLocalFile) dom.bgLocalFile.addEventListener('change', async (e) => {
+        if (e.target.files[0]) {
+            await saveMedia(e.target.files[0]);
+            settings.backgroundType = 'local';
+            settings.backgroundValue = 'local_bg';
+            saveSettings();
+        }
     });
     if (dom.ambientSoundSelect) dom.ambientSoundSelect.addEventListener('change', (e) => { settings.ambientSound = e.target.value; saveSettings(); });
     if (dom.ambientVolume) dom.ambientVolume.addEventListener('input', (e) => { settings.ambientVolume = e.target.value; saveSettings(); });
@@ -540,7 +568,7 @@
     if (dom.toggleClock) dom.toggleClock.addEventListener('change', (e) => { settings.showClock = e.target.checked; saveSettings(); });
     if (dom.clockFormatSelect) dom.clockFormatSelect.addEventListener('change', (e) => { settings.clockFormat = e.target.value; saveSettings(); });
     if (dom.customSearchUrlInput) dom.customSearchUrlInput.addEventListener('input', (e) => { settings.customSearchUrl = e.target.value; saveSettings(); });
-    if (dom.engineRadios) dom.engineRadios.forEach(r => r.addEventListener('change', (e) => { settings.searchEngine = e.target.value; saveSettings(); }));
+    if (dom.engineRadios) dom.engineRadios.forEach(r => r.addEventListener('change', (e) => { settings.searchEngine = e.target.value; saveSettings(); updateSearchUI(); }));
     if (dom.toggleSearch) dom.toggleSearch.addEventListener('change', (e) => { settings.showSearch = e.target.checked; saveSettings(); });
     if (dom.toggleTopSites) dom.toggleTopSites.addEventListener('change', (e) => { settings.showTopSites = e.target.checked; saveSettings(); });
     if (dom.themeRadios) dom.themeRadios.forEach(r => r.addEventListener('change', (e) => { settings.themePreference = e.target.value; saveSettings(); }));
@@ -554,8 +582,8 @@
                 dom.videoSoundBtn.classList.toggle('muted', settings.videoMuted);
                 const svg = dom.videoSoundBtn.querySelector('svg');
                 if (svg) {
-                    svg.innerHTML = settings.videoMuted ? 
-                        '<path d="M16.5 12c0-1.77-1.02-3.29-2.5-4.03v2.21l2.45 2.45c.05-.21.05-.42.05-.63zm2.5 0c0 .94-.2 1.82-.54 2.64l1.51 1.51C20.63 14.91 21 13.5 21 12c0-4.28-2.99-7.86-7-8.77v2.06c2.89.86 5 3.54 5 6.71zM4.27 3L3 4.27l7.73 7.73H7v6h4l5 5v-6.73l4.25 4.25c.67-.64 1.24-1.37 1.7-2.18L5.73 3zM12 4L9.27 6.73 12 9.46V4z"/>' : 
+                    svg.innerHTML = settings.videoMuted ?
+                        '<path d="M16.5 12c0-1.77-1.02-3.29-2.5-4.03v2.21l2.45 2.45c.05-.21.05-.42.05-.63zm2.5 0c0 .94-.2 1.82-.54 2.64l1.51 1.51C20.63 14.91 21 13.5 21 12c0-4.28-2.99-7.86-7-8.77v2.06c2.89.86 5 3.54 5 6.71zM4.27 3L3 4.27l7.73 7.73H7v6h4l5 5v-6.73l4.25 4.25c.67-.64 1.24-1.37 1.7-2.18L5.73 3zM12 4L9.27 6.73 12 9.46V4z"/>' :
                         '<path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/>';
                 }
                 saveSettings(true);
@@ -588,10 +616,10 @@
     try {
         const stored = localStorage.getItem('raeen_dashboard_focus');
         if (stored) focusTimerData = JSON.parse(stored);
-    } catch(e){}
+    } catch (e) { }
 
     function saveFocusState() {
-        try { localStorage.setItem('raeen_dashboard_focus', JSON.stringify(focusTimerData)); } catch(e){}
+        try { localStorage.setItem('raeen_dashboard_focus', JSON.stringify(focusTimerData)); } catch (e) { }
     }
 
     function syncFocusState() {
@@ -657,26 +685,26 @@
     try {
         const storedNotes = localStorage.getItem('raeen_dashboard_notes');
         if (storedNotes) notes = JSON.parse(storedNotes);
-    } catch(e){}
-    
+    } catch (e) { }
+
     let currentEditingNoteId = null;
 
     function saveNotes(noRender = false) {
-        try { localStorage.setItem('raeen_dashboard_notes', JSON.stringify(notes)); } catch(e){}
+        try { localStorage.setItem('raeen_dashboard_notes', JSON.stringify(notes)); } catch (e) { }
         if (!noRender) renderNotes();
     }
 
     function renderNotes() {
         if (!dom.notesList || !dom.notesCount) return;
         dom.notesCount.textContent = notes.length;
-        
+
         if (notes.length === 0) {
             dom.notesList.classList.add('hidden');
             if (dom.notesEmpty) dom.notesEmpty.classList.remove('hidden');
         } else {
             dom.notesList.classList.remove('hidden');
             if (dom.notesEmpty) dom.notesEmpty.classList.add('hidden');
-            dom.notesList.innerHTML = notes.sort((a,b) => (b.date || 0) - (a.date || 0)).map(n => {
+            dom.notesList.innerHTML = notes.sort((a, b) => (b.date || 0) - (a.date || 0)).map(n => {
                 const dateStr = n.date ? new Date(n.date).toLocaleDateString([], { month: 'short', day: 'numeric' }) : '';
                 return `
                     <div class="note-card" data-id="${n.id}">
@@ -686,7 +714,7 @@
                     </div>
                 `;
             }).join('');
-            
+
             document.querySelectorAll('.note-card').forEach(el => {
                 el.addEventListener('click', () => openNoteEditor(el.dataset.id));
             });
@@ -712,7 +740,7 @@
     }
 
     function updateNoteCharCount() {
-        if(dom.noteCharCount) dom.noteCharCount.textContent = `${dom.noteEditorBody.value.length} characters`;
+        if (dom.noteCharCount) dom.noteCharCount.textContent = `${dom.noteEditorBody.value.length} characters`;
     }
 
     if (dom.addNoteBtn) {
@@ -744,10 +772,10 @@
             note.body = dom.noteEditorBody.value;
             note.date = Date.now();
             saveNotes(true); // Don't re-render list while typing
-            if(dom.noteSaveStatus) {
+            if (dom.noteSaveStatus) {
                 dom.noteSaveStatus.textContent = 'Saving...';
                 dom.noteSaveStatus.style.opacity = '1';
-                setTimeout(() => { if(dom.noteSaveStatus) dom.noteSaveStatus.textContent = 'Saved'; }, 500);
+                setTimeout(() => { if (dom.noteSaveStatus) dom.noteSaveStatus.textContent = 'Saved'; }, 500);
             }
         }
     }
@@ -770,18 +798,18 @@
             if (settings.clockFormat === 'auto') {
                 use12h = new Intl.DateTimeFormat('default', { hour: 'numeric' }).resolvedOptions().hour12;
             }
-            const options = { 
-                hour: '2-digit', 
-                minute: '2-digit', 
-                hour12: use12h 
+            const options = {
+                hour: '2-digit',
+                minute: '2-digit',
+                hour12: use12h
             };
             let timeStr = now.toLocaleTimeString([], options);
-            
+
             // CLEAN TIME: Remove any AM/PM and ensure HH:MM format
             timeStr = timeStr.replace(/\s?[AP]M/i, '').trim();
             const parts = timeStr.split(':');
             if (parts.length >= 2) timeStr = `${parts[0].padStart(2, '0')}:${parts[1]}`;
-            
+
             dom.timeEl.textContent = timeStr;
         }
         if (dom.cardDateValue && dom.cardDateDay) {
@@ -797,7 +825,7 @@
         document.documentElement.style.backgroundColor = '';
         document.body.style.visibility = 'visible';
         document.body.style.opacity = '1';
-        
+
         updateTime();
         setInterval(updateTime, 1000);
     });
@@ -806,7 +834,7 @@
     let audioInteractionDone = false;
     document.addEventListener('click', () => {
         if (!audioInteractionDone && settings.ambientSound !== 'none' && dom.ambientAudio.paused) {
-            dom.ambientAudio.play().catch(() => {});
+            dom.ambientAudio.play().catch(() => { });
         }
         audioInteractionDone = true;
     }, { once: true });
@@ -818,8 +846,8 @@
             tab.classList.add('active'); document.getElementById(tab.dataset.target).classList.add('active');
         }));
     }
-    if(dom.settingsBtn) dom.settingsBtn.addEventListener('click', () => dom.modalOverlay.classList.remove('hidden'));
-    if(dom.closeBtn) dom.closeBtn.addEventListener('click', () => dom.modalOverlay.classList.add('hidden'));
+    if (dom.settingsBtn) dom.settingsBtn.addEventListener('click', () => dom.modalOverlay.classList.remove('hidden'));
+    if (dom.closeBtn) dom.closeBtn.addEventListener('click', () => dom.modalOverlay.classList.add('hidden'));
 
     // Cross-tab Synchronization
     window.addEventListener('storage', (e) => {
@@ -828,17 +856,17 @@
                 settings = { ...settings, ...JSON.parse(e.newValue) };
                 applySettings();
                 updateTime();
-            } catch(err){}
+            } catch (err) { }
         } else if (e.key === 'raeen_dashboard_notes') {
             try {
                 notes = JSON.parse(e.newValue) || [];
                 if (!currentEditingNoteId) renderNotes();
-            } catch(err){}
+            } catch (err) { }
         } else if (e.key === 'raeen_dashboard_focus') {
             try {
                 focusTimerData = JSON.parse(e.newValue);
                 syncFocusState();
-            } catch(err){}
+            } catch (err) { }
         }
     });
 

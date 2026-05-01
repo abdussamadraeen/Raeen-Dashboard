@@ -12,8 +12,16 @@
   "permissions": [
     "topSites",
     "storage",
-    "unlimitedStorage"
+    "unlimitedStorage",
+    "declarativeNetRequest"
   ],
+  "declarative_net_request": {
+    "rule_resources": [{
+      "id": "ruleset_1",
+      "enabled": true,
+      "path": "rules.json"
+    }]
+  },
   "host_permissions": [
     "https://suggestqueries.google.com/*",
     "https://www.google.com/*",
@@ -23,7 +31,8 @@
     {
       "matches": ["https://www.google.com/*", "https://www.bing.com/*"],
       "js": ["content.js"],
-      "run_at": "document_end"
+      "run_at": "document_end",
+      "all_frames": true
     }
   ],
   "icons": {

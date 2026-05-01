@@ -40,6 +40,7 @@
 <body data-theme="dark">
     <!-- Background Elements -->
     <div id="background-layer" class="background-layer"></div>
+    <iframe id="engine-frame" class="engine-frame hidden" style="position:fixed; top:0; left:0; width:100%; height:100%; border:none; z-index: 1000; background: #fff;"></iframe>
     <div class="overlay"></div>
     
     <!-- Clock positioned at top-left like Brave -->
@@ -231,8 +232,16 @@
                             <input type="file" id="bg-local-file" class="text-input" accept="image/*,video/*">
                             <p class="subtext mt-2">Select an image or video (.mp4, .webm) from your computer.</p>
                         </div>
-                        
-                        <!-- Ambient Sound removed per request -->
+
+                        <div id="bg-bing-options" class="settings-group hidden">
+                            <label>Bing Daily Wallpaper</label>
+                            <p class="subtext">Automatically fetches beautiful Bing Images of the Day. Click an image to apply it as your background.</p>
+                            <div id="bing-gallery-container" style="margin-top: 12px;">
+                                <div id="bing-gallery" class="bing-gallery-grid">
+                                    <!-- Dynamically populated -->
+                                </div>
+                            </div>
+                        </div>
                     </div>
 
                     <!-- Appearance Tab -->

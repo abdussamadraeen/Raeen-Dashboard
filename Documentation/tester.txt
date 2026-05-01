@@ -1,0 +1,12 @@
+1. Test Accounts: No test accounts, usernames, or passwords are required. All features are fully accessible immediately upon installation without any login.
+
+2. Testing Steps & Features:
+- Access the UI: Open a new tab in the browser. The extension replaces the default new tab page with the "Raeen Dashboard".
+- Search Functionality: Type in the central search bar to see real-time search suggestions. Press Enter to perform a search.
+- Top Sites: Below the search bar, verify that your most frequently visited websites are displayed dynamically.
+- Focus Timer: Interact with the timer icon to start, pause, and reset the Pomodoro focus timer.
+- Quick Notes: Click the notes section to type. Refresh the page to verify that the text saves automatically to local storage.
+- Settings: Click the settings gear icon to change the background image or switch the default search engine between Google and Bing.
+
+3. Dependencies & Privacy: 
+There are no external product dependencies, hidden features, conditional logic, or paid subscriptions. All user data (notes, preferences) is stored 100% locally on the device using browser storage APIs. The extension does not collect, track, or transmit any user data to remote servers.

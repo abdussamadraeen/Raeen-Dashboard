@@ -1,0 +1,24 @@
+# Browser Extension Clutter
+_metadata/
+*.zip
+*.patch
+*.crx
+
+# OS Files
+desktop.ini
+Thumbs.db
+.DS_Store
+
+# Development
+node_modules/
+.vscode/
+.idea/
+*.log
+
+# Sub-tools/dependencies (if they aren't part of the repo)
+antigravity-awesome-skills-main/
+antigravity-skills-main/
+.skills/
+
+# Backups
+*fgd*.png

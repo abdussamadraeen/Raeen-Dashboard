@@ -1,4 +1,10 @@
 (function() {
+    // Only run in the top frame to prevent duplicate buttons
+    if (window.self !== window.top) return;
+    
+    // Prevent duplicate injection in the same frame
+    if (document.querySelector('.raeen-settings-btn')) return;
+
     const urlParams = new URLSearchParams(window.location.search);
     if (urlParams.has('raeen_dashboard') || window.location.href.includes('raeen_dashboard=true')) {
         const btn = document.createElement('a');

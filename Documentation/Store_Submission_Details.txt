@@ -39,7 +39,7 @@ Features include:
 
 ## Microsoft Edge Add-ons - Additional Info
 
-- **Brief Description:** A premium productivity dashboard for your new tab.
+- **Brief Description:** A premium productivity dashboard for your search new tab.
 - **Privacy Policy URL:** (If you don't have one, you can state: "This extension does not collect any user data and stores all settings locally on the user's device.")
 - **Support Contact:** [Your Email/Contact]
 - **Category:** Productivity / Personalization
