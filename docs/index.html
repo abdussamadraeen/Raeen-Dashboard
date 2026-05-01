@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Raeen technologies | Elite Architecture</title>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;600;800&family=Playfair+Display:ital,wght@0,700;1,700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #030408;
+            --primary: #c084fc;
+            --secondary: #6366f1;
+            --gold-accent: #fbbf24;
+            --glass: rgba(255, 255, 255, 0.02);
+            --border: rgba(255, 255, 255, 0.08);
+            --ease-out: cubic-bezier(0.32, 0.72, 0, 1);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            scroll-behavior: smooth;
+        }
+
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background-color: var(--bg);
+            color: #fff;
+            line-height: 1.5;
+            overflow-x: hidden;
+        }
+
+        /* Ethereal Mesh Background */
+        .mesh-bg {
+            position: fixed;
+            inset: 0;
+            z-index: -1;
+            background: 
+                radial-gradient(circle at 10% 20%, rgba(99, 102, 241, 0.1) 0%, transparent 40%),
+                radial-gradient(circle at 90% 80%, rgba(192, 132, 252, 0.1) 0%, transparent 40%),
+                radial-gradient(circle at 50% 50%, rgba(251, 191, 36, 0.03) 0%, transparent 60%);
+        }
+
+        /* Nav Architecture */
+        nav {
+            position: fixed;
+            top: 24px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 90%;
+            max-width: 1200px;
+            background: rgba(10, 10, 15, 0.4);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--border);
+            border-radius: 100px;
+            padding: 12px 32px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        .logo {
+            font-family: 'Playfair Display', serif;
+            font-size: 1.25rem;
+            font-weight: 700;
+            letter-spacing: -0.5px;
+        }
+
+        header {
+            min-height: 100dvh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 120px 24px;
+            text-align: center;
+        }
+
+        .eyebrow {
+            font-size: 10px;
+            text-transform: uppercase;
+            letter-spacing: 0.25em;
+            color: var(--primary);
+            background: rgba(192, 132, 252, 0.1);
+            padding: 6px 16px;
+            border-radius: 100px;
+            border: 1px solid rgba(192, 132, 252, 0.2);
+            margin-bottom: 32px;
+            animation: fadeIn 1s var(--ease-out);
+        }
+
+        h1 {
+            font-family: 'Playfair Display', serif;
+            font-size: clamp(3.5rem, 10vw, 6.5rem);
+            line-height: 0.95;
+            letter-spacing: -0.04em;
+            margin-bottom: 32px;
+            font-weight: 700;
+            animation: slideUp 1.2s var(--ease-out);
+        }
+
+        h1 i {
+            color: var(--gold-accent);
+            font-style: italic;
+        }
+
+        .hero-desc {
+            max-width: 600px;
+            font-size: 1.15rem;
+            color: #94a3b8;
+            margin-bottom: 48px;
+            font-weight: 300;
+            animation: slideUp 1.4s var(--ease-out);
+        }
+
+        /* Island Button Architecture */
+        .cta-pill {
+            display: inline-flex;
+            align-items: center;
+            padding: 8px 8px 8px 32px;
+            background: #fff;
+            color: #000;
+            text-decoration: none;
+            border-radius: 100px;
+            font-weight: 700;
+            font-size: 0.9rem;
+            transition: 0.4s var(--ease-out);
+            animation: slideUp 1.6s var(--ease-out);
+        }
+
+        .cta-pill:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 20px 40px rgba(99, 102, 241, 0.2);
+        }
+
+        .pill-icon {
+            width: 40px;
+            height: 40px;
+            background: rgba(0, 0, 0, 0.05);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-left: 16px;
+            transition: 0.4s var(--ease-out);
+        }
+
+        .cta-pill:hover .pill-icon {
+            transform: rotate(45deg);
+            background: rgba(0, 0, 0, 0.1);
+        }
+
+        /* Section Spacing */
+        .section {
+            padding: 160px 24px;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        /* Double-Bezel Card Architecture */
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(380px, 1fr));
+            gap: 24px;
+        }
+
+        .bezel-shell {
+            padding: 8px;
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid var(--border);
+            border-radius: 40px;
+            transition: 0.4s var(--ease-out);
+        }
+
+        .bezel-core {
+            background: #0a0a0f;
+            padding: 56px;
+            border-radius: 32px;
+            height: 100%;
+            border: 1px solid rgba(255, 255, 255, 0.03);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .bezel-shell:hover {
+            border-color: var(--primary);
+            transform: translateY(-8px);
+        }
+
+        .bezel-core h3 {
+            font-family: 'Playfair Display', serif;
+            font-size: 2rem;
+            margin-bottom: 24px;
+            color: #fff;
+        }
+
+        .bezel-core p {
+            color: #64748b;
+            font-size: 1.1rem;
+            line-height: 1.7;
+        }
+
+        /* Compliance Protocol Section */
+        .compliance-box {
+            background: #000;
+            border-top: 1px solid var(--border);
+            padding: 160px 24px;
+        }
+
+        .compliance-content {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        .protocol-row {
+            display: flex;
+            gap: 80px;
+            margin-bottom: 80px;
+            padding-bottom: 40px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .protocol-title {
+            width: 300px;
+            flex-shrink: 0;
+            font-family: 'Playfair Display', serif;
+            font-size: 1.5rem;
+            color: var(--primary);
+        }
+
+        .protocol-desc {
+            color: #94a3b8;
+            font-size: 1.15rem;
+        }
+
+        footer {
+            padding: 120px 24px;
+            text-align: center;
+            border-top: 1px solid var(--border);
+            color: #475569;
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+        }
+
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes slideUp { 
+            from { opacity: 0; transform: translateY(30px); filter: blur(10px); } 
+            to { opacity: 1; transform: translateY(0); filter: blur(0); } 
+        }
+
+        @media (max-width: 768px) {
+            nav { width: 95%; padding: 12px 20px; }
+            .section { padding: 80px 24px; }
+            .protocol-row { flex-direction: column; gap: 20px; }
+            h1 { font-size: 3.5rem; }
+        }
+    </style>
+</head>
+<body>
+    <div class="mesh-bg"></div>
+
+    <nav>
+        <div class="logo">RAEEN TECHNOLOGIES</div>
+        <div style="display: flex; gap: 24px;">
+            <a href="#arch" style="color: #94a3b8; text-decoration: none; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px;">Architecture</a>
+            <a href="#legal" style="color: #94a3b8; text-decoration: none; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px;">Security</a>
+        </div>
+    </nav>
+
+    <header>
+        <div class="eyebrow">The Future of Productivity</div>
+        <h1>Engineered for <br>Total <i>Sovereignty</i></h1>
+        <p class="hero-desc">A high-performance workspace designed by Raeen Technologies. Experience zero-latency productivity with a dashboard that respects your privacy.</p>
+        <a href="#legal" class="cta-pill">
+            Explore Security Protocol
+            <div class="pill-icon">↗</div>
+        </a>
+    </header>
+
+    <div id="arch" class="section">
+        <div class="grid">
+            <div class="bezel-shell">
+                <div class="bezel-core">
+                    <h3>Precision Timer</h3>
+                    <p>Master your work sessions with a high-fidelity focus management system. Built to eliminate context switching and maximize flow-state efficiency.</p>
+                </div>
+            </div>
+            <div class="bezel-shell">
+                <div class="bezel-core">
+                    <h3>Local Storage</h3>
+                    <p>Enterprise-grade persistence for your thoughts. Your data remains on your hardware, encrypted and accessible without external dependencies.</p>
+                </div>
+            </div>
+            <div class="bezel-shell">
+                <div class="bezel-core">
+                    <h3>Search Uplink</h3>
+                    <p>Direct low-latency integration with global search archives. Real-time suggestions delivered at the speed of thought, 100% private.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="legal" class="compliance-box">
+        <div class="compliance-content">
+            <h2 style="font-family: 'Playfair Display', serif; font-size: 3rem; margin-bottom: 80px;">Privacy Protocol</h2>
+            
+            <div class="protocol-row">
+                <div class="protocol-title">Network Integrity</div>
+                <div class="protocol-desc">All system processes are executed locally. Raeen Dashboard maintains no external database connections, ensuring zero-tracking of your data.</div>
+            </div>
+
+            <div class="protocol-row">
+                <div class="protocol-title">Data Sovereignty</div>
+                <div class="protocol-desc">We do not hold or manage user metrics. Every configuration and note is stored exclusively within your local browser environment.</div>
+            </div>
+
+            <div class="protocol-row">
+                <div class="protocol-title">Secure Bridging</div>
+                <div class="protocol-desc">Search suggestions utilize direct, secure API bridges to global providers. No intermediate servers witness or log your activity.</div>
+            </div>
+        </div>
+    </div>
+
+    <footer>
+        &copy; 2026 RAEEN TECHNOLOGIES // GLOBAL PERFORMANCE STANDARDS <br>
+        BUILT FOR THE NEWTAB_LITE DEPLOYMENT
+    </footer>
+</body>
+</html>
